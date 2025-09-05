@@ -172,7 +172,7 @@ export function CatalogBuilderForm() {
         productCategory: formValues.category,
         material: formValues.material,
         size: formValues.size,
-        artisanEffortHours: formValues.artisanEffortHours,
+        artisanEffortHours: Number(formValues.artisanEffortHours),
     });
     if (result.error) {
         toast({ variant: "destructive", title: "Error Suggesting Price", description: result.error });
