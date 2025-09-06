@@ -19,12 +19,12 @@ export function PageLayout({ children }: PageLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <AppNavbar />
-      <main className="container mx-auto space-y-6 p-4 md:p-8 pt-6">
+      <main className="container mx-auto space-y-6 p-4 md:p-8 pt-6 flex-grow">
         {children}
-        <Footer />
       </main>
+      <Footer />
     </div>
   );
 }

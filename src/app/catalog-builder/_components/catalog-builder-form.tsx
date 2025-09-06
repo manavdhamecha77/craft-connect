@@ -279,14 +279,17 @@ export function CatalogBuilderForm() {
                   <ImageIcon className="w-10 h-10 text-muted-foreground" />
                 )}
               </div>
-              <Input
-                id="image"
-                type="file"
-                accept="image/*"
-                {...register("image")}
-                onChange={onFileChange}
-                className="max-w-xs"
-              />
+              <div className="relative max-w-xs overflow-hidden rounded-lg self-center">
+                <Input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  {...register("image")}
+                  onChange={onFileChange}
+                  className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 file:cursor-pointer file:transition-all file:duration-200 hover:file:shadow-lg file:animate-pulse relative z-10"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg blur-sm opacity-50 animate-tilt pointer-events-none -z-10"></div>
+              </div>
             </div>
           </div>
         </CardContent>
