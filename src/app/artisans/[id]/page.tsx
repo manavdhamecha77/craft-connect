@@ -19,7 +19,25 @@ import { ProductCard } from "@/components/product-card"
 
 // NOTE: This is placeholder data. In a real application, you would fetch this
 // data from a database based on the provided `id`.
-const artisan = {
+type Product = {
+  id: string
+  name: string
+  price: number
+  image: string
+  hint: string
+  // Add other product properties as needed
+  [key: string]: any
+}
+
+const artisan: {
+  name: string
+  bio: string
+  location: string
+  avatar: string
+  coverImage: string
+  tags: string[]
+  products: Product[]
+} = {
   name: "Artisan Name",
   bio: "This is the artisan's biography. It will describe their craft, passion, and history.",
   location: "City, State",
