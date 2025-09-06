@@ -17,6 +17,14 @@ import { PageLayout } from "@/components/page-layout"
 import { PageHeader } from "@/components/page-header"
 import { ProductCard } from "@/components/product-card"
 
+interface Product {
+  id: string
+  name: string
+  price: number
+  image: string
+  hint: string
+}
+
 // NOTE: This is placeholder data. In a real application, you would fetch this
 // data from a database based on the provided `id`.
 const artisan = {
@@ -26,15 +34,16 @@ const artisan = {
   avatar: "",
   coverImage: "https://picsum.photos/1200/400",
   tags: ["Tag One", "Tag Two", "Tag Three"],
-  products: [],
+  products: [] as Product[],
 }
 
-export default function ArtisanProfilePage({
+export default async function ArtisanProfilePage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
-  const isOwnProfile = params.id === "me"
+  const resolvedParams = await params
+  const isOwnProfile = resolvedParams.id === "me"
 
   return (
     <PageLayout>
