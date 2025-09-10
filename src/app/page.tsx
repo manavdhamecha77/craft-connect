@@ -38,13 +38,17 @@ const recentProducts: any[] = [];
 const recentSales: any[] = [];
 
 
-export default function DashboardPage() {
+export default function HomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/auth");
+    if (!loading) {
+      if (!user) {
+        router.push("/auth");
+      } else {
+        router.push("/dashboard");
+      }
     }
   }, [user, loading, router]);
 

@@ -5,6 +5,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import {
   onAuthStateChanged,
   signOut as firebaseSignOut,
+  signInAnonymously,
   type User,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -12,23 +13,52 @@ import { usePathname, useRouter } from "next/navigation";
 import { toast } from "./use-toast";
 
 
+export interface ArtisanUser extends User {
+  artisanProfile?: {
+    name: string;
+    region: string;
+    specialization?: string;
+    bio?: string;
+    experience?: string;
+    techniques?: string;
+    inspiration?: string;
+    goals?: string;
+  };
+}
+
 interface AuthContextType {
-  user: User | null;
+  user: ArtisanUser | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  signInAsGuest: () => Promise<void>;
+  updateArtisanProfile: (profile: ArtisanUser['artisanProfile']) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ArtisanUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        // Load artisan profile from localStorage or set defaults
+        const savedProfile = localStorage.getItem(`artisan_profile_${firebaseUser.uid}`);
+        const artisanProfile = savedProfile ? JSON.parse(savedProfile) : {
+          name: 'Anonymous Artisan',
+          region: 'Unknown Region'
+        };
+
+        setUser({
+          ...firebaseUser,
+          artisanProfile
+        } as ArtisanUser);
+      } else {
+        setUser(null);
+      }
       setLoading(false);
       // We no longer need to handle redirection here, 
       // it's handled in the form itself.
@@ -42,7 +72,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push("/auth");
   };
 
-  const value = { user, loading, signOut };
+  const signInAsGuest = async () => {
+    try {
+      setLoading(true);
+      await signInAnonymously(auth);
+      // The onAuthStateChanged listener will handle setting the user
+    } catch (error) {
+      console.error('Error signing in anonymously:', error);
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: "Failed to sign in. Please try again.",
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateArtisanProfile = (profile: ArtisanUser['artisanProfile']) => {
+    if (!user) return;
+
+    const updatedUser = {
+      ...user,
+      artisanProfile: profile
+    };
+
+    setUser(updatedUser);
+
+    // Save to localStorage
+    localStorage.setItem(
+      `artisan_profile_${user.uid}`,
+      JSON.stringify(profile)
+    );
+  };
+
+  const value = { user, loading, signOut, signInAsGuest, updateArtisanProfile };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
@@ -54,3 +119,23 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// Custom hook to get current artisan ID
+export function useCurrentArtisanId(): string | null {
+  const { user } = useAuth();
+  return user?.uid || null;
+}
+
+// Custom hook to check if user is authenticated
+export function useRequireAuth() {
+  const { user, loading, signInAsGuest } = useAuth();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      // Automatically sign in as anonymous user for demo purposes
+      signInAsGuest();
+    }
+  }, [loading, user, signInAsGuest]);
+
+  return { user, loading };
+}

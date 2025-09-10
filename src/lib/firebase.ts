@@ -1,5 +1,6 @@
 import { initializeApp, getApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
 
 // Validate required Firebase configuration
 const validateFirebaseConfig = () => {
@@ -37,13 +38,15 @@ const firebaseConfig = {
 // Initialize Firebase
 let app: FirebaseApp;
 let auth: Auth;
+let db: Firestore;
 
 try {
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
   auth = getAuth(app);
+  db = getFirestore(app);
 } catch (error) {
   console.error('Failed to initialize Firebase:', error);
   throw error;
 }
 
-export { app, auth };
+export { app, auth, db };
