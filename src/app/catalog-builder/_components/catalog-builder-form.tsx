@@ -45,6 +45,8 @@ import {
 } from "../actions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { addProductToMarketplace, type GeneratedProductData } from "@/lib/product-store";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   productName: z.string().min(1, "Product name is required"),
@@ -75,6 +77,7 @@ export function CatalogBuilderForm() {
     marketing: null,
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const router = useRouter();
 
   const {
     register,
@@ -201,6 +204,55 @@ export function CatalogBuilderForm() {
         toast({ title: "Marketing Magic!", description: "Social media content is ready." });
     }
     setLoadingStates(s => ({ ...s, marketing: false }));
+  };
+
+  const onSaveProduct = async () => {
+    // Validate that we have essential data to save the product
+    if (!formValues.productName || !formValues.category || !imagePreview) {
+      toast({
+        variant: "destructive",
+        title: "Missing Information",
+        description: "Please provide product name, category, and an image before saving.",
+      });
+      return;
+    }
+
+    if (!generatedData.catalog) {
+      toast({
+        variant: "destructive",
+        title: "Generate Catalog Entry First",
+        description: "Please generate the catalog entry before saving the product.",
+      });
+      return;
+    }
+
+    try {
+      // Save product to marketplace
+      const savedProduct = addProductToMarketplace(
+        formValues,
+        {
+          catalog: generatedData.catalog || undefined,
+          pricing: generatedData.pricing || undefined,
+          story: generatedData.story || undefined,
+          marketing: generatedData.marketing || undefined,
+        },
+        imagePreview
+      );
+
+      toast({
+        title: "Product Saved Successfully!",
+        description: `${savedProduct.title || savedProduct.name} has been added to the marketplace.`,
+      });
+
+      // Navigate to the specific product page to show the new product
+      router.push(`/marketplace/${savedProduct.id}`);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error Saving Product",
+        description: "Failed to save the product. Please try again.",
+      });
+    }
   };
 
 
@@ -408,8 +460,12 @@ export function CatalogBuilderForm() {
       </Card>
       
       <div className="flex justify-end pt-8">
-        <Button size="lg" onClick={() => toast({ title: "Product Saved!", description: "Your new creation is now in your catalog." })}>
-          Save Product
+        <Button 
+          size="lg" 
+          onClick={onSaveProduct}
+          disabled={!generatedData.catalog || !formValues.productName || !formValues.category || !imagePreview}
+        >
+          Save to Marketplace
         </Button>
       </div>
 

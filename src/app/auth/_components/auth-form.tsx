@@ -7,9 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { handleSignIn, handleSignUp } from "../actions";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { app } from "@/lib/firebase";
+import { signInWithEmail, signUpWithEmail, signInWithGoogle } from "@/lib/auth-utils";
 import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 
@@ -20,8 +18,6 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
 
 export function AuthForm() {
   const [isLogin, setIsLogin] = React.useState(true);
@@ -66,7 +62,7 @@ export function AuthForm() {
 
     let result;
     if (isLogin) {
-      result = await handleSignIn(email, password);
+      result = await signInWithEmail(email, password);
     } else {
       const name = nameRef.current?.value;
       if (!name) {
@@ -74,7 +70,7 @@ export function AuthForm() {
         setIsLoading(false);
         return;
       }
-      result = await handleSignUp(email, password, name);
+      result = await signUpWithEmail(email, password, name);
     }
 
     if (result.error) {
@@ -88,15 +84,16 @@ export function AuthForm() {
 
   const handleGoogleAuth = async () => {
     setIsLoading(true);
-    try {
-        await signInWithPopup(auth, googleProvider);
-        // The onAuthStateChanged listener in AuthProvider will handle the redirect.
-        onAuthSuccess();
-    } catch (error: any) {
-        onAuthFailure(error.message);
-    } finally {
-        setIsLoading(false);
+    
+    const result = await signInWithGoogle();
+    
+    if (result.error) {
+      onAuthFailure(result.error);
+    } else {
+      onAuthSuccess();
     }
+    
+    setIsLoading(false);
   };
 
   return (

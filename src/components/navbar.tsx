@@ -44,8 +44,13 @@ const menuItems = [
     icon: ClipboardPlus,
   },
   {
+    href: "/marketplace",
+    label: "Marketplace",
+    icon: GalleryVerticalEnd,
+  },
+  {
     href: "/products",
-    label: "Products",
+    label: "My Products",
     icon: GalleryVerticalEnd,
   },
   {

@@ -3,16 +3,14 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import {
-  getAuth,
   onAuthStateChanged,
   signOut as firebaseSignOut,
   type User,
 } from "firebase/auth";
-import { app } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "./use-toast";
 
-const auth = getAuth(app);
 
 interface AuthContextType {
   user: User | null;

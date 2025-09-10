@@ -1,4 +1,6 @@
+"use client";
 
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { File, ListFilter, MoreHorizontal, PlusCircle } from "lucide-react";
@@ -34,15 +36,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageLayout } from "@/components/page-layout";
 import { PageHeader } from "@/components/page-header";
 import { format } from 'date-fns';
+import { getMarketplaceProducts, type MarketplaceProduct } from "@/lib/product-store";
 
-const products: any[] = [];
+const useProducts = () => {
+  const [products, setProducts] = useState<MarketplaceProduct[]>([]);
+  
+  useEffect(() => {
+    setProducts(getMarketplaceProducts());
+  }, []);
+  
+  return products;
+};
 
 export default function ProductsPage() {
+  const products = useProducts();
+
   return (
     <PageLayout>
       <Tabs defaultValue="all">
         <div className="flex items-center">
-          <PageHeader title="Products" />
+          <PageHeader title="My Products" />
           <div className="ml-auto flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -127,7 +140,7 @@ export default function ProductsPage() {
                       </TableRow>
                   ) : (
                     products.map((product) => (
-                      <TableRow key={product.name}>
+                      <TableRow key={product.id}>
                         <TableCell className="hidden sm:table-cell">
                           <Image
                             alt="Product image"
@@ -135,11 +148,10 @@ export default function ProductsPage() {
                             height="64"
                             src={product.image}
                             width="64"
-                            data-ai-hint={product.hint}
                           />
                         </TableCell>
                         <TableCell className="font-medium">
-                          {product.name}
+                          {product.title || product.name}
                         </TableCell>
                         <TableCell>
                           <Badge variant={product.status === 'draft' ? 'secondary' : product.status === 'archived' ? 'outline' : 'default'}>
@@ -150,10 +162,10 @@ export default function ProductsPage() {
                           ₹{product.price.toLocaleString()}
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
-                          {product.stock} in stock
+                          Available
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
-                          {format(product.date, "PPP")}
+                          {format(new Date(product.createdAt), "PPP")}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
