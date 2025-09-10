@@ -14,6 +14,7 @@ import { toast } from "./use-toast";
 
 
 export interface ArtisanUser extends User {
+  role?: 'artisan' | 'customer';
   artisanProfile?: {
     name: string;
     region: string;
@@ -45,23 +46,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
+        // Load user role from localStorage
+        const userRole = localStorage.getItem('userRole') as 'artisan' | 'customer' || 'customer';
+        
         // Load artisan profile from localStorage or set defaults
         const savedProfile = localStorage.getItem(`artisan_profile_${firebaseUser.uid}`);
         const artisanProfile = savedProfile ? JSON.parse(savedProfile) : {
-          name: 'Anonymous Artisan',
+          name: userRole === 'artisan' ? 'Anonymous Artisan' : firebaseUser.displayName || 'Customer',
           region: 'Unknown Region'
         };
 
         setUser({
           ...firebaseUser,
+          role: userRole,
           artisanProfile
         } as ArtisanUser);
       } else {
         setUser(null);
       }
       setLoading(false);
-      // We no longer need to handle redirection here, 
-      // it's handled in the form itself.
     });
 
     return () => unsubscribe();

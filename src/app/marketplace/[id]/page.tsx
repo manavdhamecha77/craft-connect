@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Heart, MapPin, User, Share2, ShoppingCart, Star, Shield, Truck, RotateCcw, MessageCircle } from "lucide-react";
+import { ArrowLeft, Heart, MapPin, User, Share2, ShoppingCart, Star, Shield, Truck, RotateCcw, MessageCircle, Plus, Minus, StarIcon } from "lucide-react";
+import { useCart } from "@/contexts/cart-context";
+import { useOrders } from "@/contexts/orders-context";
 import { PageLayout } from "@/components/page-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { 
   getProduct, 
@@ -21,9 +24,18 @@ import { ArtisanProfile } from "@/components/artisan-profile";
 
 export default function ProductDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const { toast } = useToast();
+  const { addToCart, isInCart } = useCart();
+  const { getProductReviews, getProductAverageRating, canReviewProduct, addReview } = useOrders();
   const [product, setProduct] = useState<FirestoreProduct | null>(null);
   const [loading, setLoading] = useState(true);
+  const [quantity, setQuantity] = useState(1);
+  const [reviewForm, setReviewForm] = useState({
+    rating: 0,
+    comment: ''
+  });
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   useEffect(() => {
     loadProduct();
@@ -53,6 +65,32 @@ export default function ProductDetailPage() {
         }
 
         setProduct(fetchedProduct);
+        
+        // Add demo reviews if none exist (for testing purposes)
+        const existingReviews = getProductReviews(fetchedProduct.id);
+        if (existingReviews.length === 0) {
+          // Add some demo reviews
+          const demoReviews = [
+            {
+              productId: fetchedProduct.id,
+              customerId: 'demo-customer-1',
+              customerName: 'Priya Sharma',
+              orderId: 'demo-order-1',
+              rating: 5,
+              comment: 'Beautiful handcrafted piece! The quality is exceptional and you can see the attention to detail. Highly recommend!'
+            },
+            {
+              productId: fetchedProduct.id,
+              customerId: 'demo-customer-2', 
+              customerName: 'Rajesh Kumar',
+              orderId: 'demo-order-2',
+              rating: 4,
+              comment: 'Great product and fast delivery. The artisan did an amazing job. Worth every penny.'
+            }
+          ];
+          
+          demoReviews.forEach(review => addReview(review));
+        }
       }
     } catch (error) {
       console.error("Error loading product:", error);
@@ -79,11 +117,74 @@ export default function ProductDetailPage() {
     }
   };
 
-  const handleContact = () => {
-    toast({
-      title: "Contact Feature",
-      description: "Contact functionality will be implemented soon!",
-    });
+  const handleAddToCart = () => {
+    if (!product) return;
+    
+    const displayData = getFinalProductDisplay(product);
+    const cartItem = {
+      id: `cart-${product.id}-${Date.now()}`,
+      productId: product.id,
+      name: displayData.title,
+      price: displayData.price || 0,
+      image: product.image,
+      artisan: product.artisanName || "Unknown Artisan",
+      region: product.artisanRegion || "",
+      maxQuantity: 10 // Default max quantity
+    };
+    
+    // Add multiple quantities if selected
+    for (let i = 0; i < quantity; i++) {
+      addToCart(cartItem);
+    }
+    
+    // Reset quantity to 1 after adding to cart
+    setQuantity(1);
+  };
+  
+  const handleBuyNow = () => {
+    if (!product) return;
+    
+    // Add to cart first
+    handleAddToCart();
+    
+    // Navigate to checkout
+    router.push('/checkout');
+  };
+  
+  const handleSubmitReview = async () => {
+    if (!product || reviewForm.rating === 0) {
+      toast({
+        title: "Invalid review",
+        description: "Please provide a rating.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSubmittingReview(true);
+    
+    try {
+      addReview({
+        productId: product.id,
+        customerId: 'current-customer', // In a real app, this would come from auth
+        customerName: 'Customer', // In a real app, this would come from user profile
+        orderId: 'mock-order-id', // This should be the actual order ID
+        rating: reviewForm.rating,
+        comment: reviewForm.comment
+      });
+      
+      // Reset form
+      setReviewForm({ rating: 0, comment: '' });
+      
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit review. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmittingReview(false);
+    }
   };
 
   if (loading) {
@@ -220,12 +321,37 @@ export default function ProductDetailPage() {
                 )}
               </div>
               
-              {/* Rating placeholder */}
+              {/* Rating display */}
               <div className="flex items-center space-x-1">
-                {[1,2,3,4,5].map((star) => (
-                  <Star key={star} className="w-4 h-4 fill-primary text-primary" />
-                ))}
-                <span className="text-sm text-muted-foreground ml-1">(New)</span>
+                {(() => {
+                  const averageRating = getProductAverageRating(product.id);
+                  const reviews = getProductReviews(product.id);
+                  const fullStars = Math.floor(averageRating);
+                  const hasHalfStar = averageRating % 1 >= 0.5;
+                  
+                  return (
+                    <>
+                      {[1,2,3,4,5].map((star) => (
+                        <Star 
+                          key={star} 
+                          className={`w-4 h-4 ${
+                            star <= fullStars 
+                              ? 'fill-primary text-primary' 
+                              : star === fullStars + 1 && hasHalfStar 
+                                ? 'fill-primary/50 text-primary' 
+                                : 'text-muted-foreground'
+                          }`} 
+                        />
+                      ))}
+                      <span className="text-sm text-muted-foreground ml-1">
+                        {reviews.length > 0 
+                          ? `${averageRating.toFixed(1)} (${reviews.length} ${reviews.length === 1 ? 'review' : 'reviews'})`
+                          : '(No reviews yet)'
+                        }
+                      </span>
+                    </>
+                  );
+                })()}
               </div>
             </div>
             
@@ -324,25 +450,62 @@ export default function ProductDetailPage() {
 
           {/* Action Buttons */}
           <div className="space-y-4">
+            {/* Quantity Selector */}
+            <div className="flex items-center space-x-3">
+              <span className="text-sm font-medium">Quantity:</span>
+              <div className="flex items-center border rounded-md">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-10 px-3"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  disabled={quantity <= 1}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <span className="min-w-[3rem] text-center text-sm font-medium">{quantity}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-10 px-3"
+                  onClick={() => setQuantity(Math.min(10, quantity + 1))}
+                  disabled={quantity >= 10}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
             <div className="flex gap-3">
-              <Button size="lg" className="flex-1" onClick={handleContact}>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="flex-1" 
+                onClick={handleAddToCart}
+                disabled={!product}
+              >
                 <ShoppingCart className="h-5 w-5 mr-2" />
-                Contact Artisan
+                {isInCart(product?.id || '') ? 'Update Cart' : 'Add to Cart'}
               </Button>
-              <Button size="lg" variant="outline" onClick={handleContact}>
-                <MessageCircle className="h-5 w-5 mr-2" />
-                Ask Question
+              <Button 
+                size="lg" 
+                className="flex-1" 
+                onClick={handleBuyNow}
+                disabled={!product}
+              >
+                Buy Now
               </Button>
             </div>
             
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Shield className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">Direct from Artisan</span>
+                <span className="text-sm font-medium">Authentic Handcrafted Product</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Contact the artisan directly to purchase this handcrafted item. 
-                All payments and shipping arrangements are handled between you and the artisan.
+                This product is handcrafted by skilled artisans using traditional techniques. 
+                Each piece is unique and supports local communities.
               </p>
             </div>
           </div>
@@ -352,9 +515,10 @@ export default function ProductDetailPage() {
       {/* Additional Information Tabs */}
       <div className="mt-12">
         <Tabs defaultValue="story" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-12 bg-muted/50">
+          <TabsList className="grid w-full grid-cols-4 h-12 bg-muted/50">
             <TabsTrigger value="story" className="text-sm font-medium">Cultural Story</TabsTrigger>
             <TabsTrigger value="artisan" className="text-sm font-medium">About Artisan</TabsTrigger>
+            <TabsTrigger value="reviews" className="text-sm font-medium">Reviews</TabsTrigger>
             <TabsTrigger value="translations" className="text-sm font-medium">Translations</TabsTrigger>
           </TabsList>
             
@@ -396,6 +560,129 @@ export default function ProductDetailPage() {
                       Meet the Artisan
                     </h3>
                     <ArtisanProfile artisan={artisanProfile} variant="detailed" />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="reviews" className="mt-8">
+              <Card className="border-0 shadow-sm">
+                <CardContent className="p-6">
+                  <div className="space-y-6">
+                    <h3 className="text-xl font-semibold flex items-center gap-2">
+                      <span className="w-1 h-6 bg-primary rounded-full"></span>
+                      Customer Reviews
+                    </h3>
+                    
+                    {(() => {
+                      const reviews = getProductReviews(product.id);
+                      const canReview = canReviewProduct('current-customer', product.id);
+                      const hasAlreadyReviewed = reviews.some(review => review.customerId === 'current-customer');
+                      
+                      return (
+                        <>
+                          {/* Review Form - Allow all users to review for testing */}
+                          {!hasAlreadyReviewed && (
+                            <div className="bg-muted/30 p-6 rounded-lg">
+                              <div className="flex items-center justify-between mb-4">
+                                <h4 className="font-medium">Write a Review</h4>
+                                <Badge variant="secondary" className="text-xs">Testing Mode</Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground mb-4">
+                                In a real app, you'd only be able to review products you've purchased and received.
+                              </p>
+                              <div className="space-y-4">
+                                <div>
+                                  <label className="text-sm font-medium mb-2 block">Rating</label>
+                                  <div className="flex items-center space-x-1">
+                                    {[1,2,3,4,5].map((star) => (
+                                      <button
+                                        key={star}
+                                        type="button"
+                                        onClick={() => setReviewForm(prev => ({ ...prev, rating: star }))}
+                                        className="focus:outline-none"
+                                      >
+                                        <Star 
+                                          className={`w-6 h-6 cursor-pointer transition-colors ${
+                                            star <= reviewForm.rating 
+                                              ? 'fill-primary text-primary' 
+                                              : 'text-muted-foreground hover:text-primary'
+                                          }`} 
+                                        />
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                                
+                                <div>
+                                  <label className="text-sm font-medium mb-2 block">Comment (Optional)</label>
+                                  <Textarea
+                                    value={reviewForm.comment}
+                                    onChange={(e) => setReviewForm(prev => ({ ...prev, comment: e.target.value }))}
+                                    placeholder="Share your experience with this product..."
+                                    rows={3}
+                                    className="resize-none"
+                                  />
+                                </div>
+                                
+                                <Button 
+                                  onClick={handleSubmitReview}
+                                  disabled={reviewForm.rating === 0 || isSubmittingReview}
+                                  className="w-full sm:w-auto"
+                                >
+                                  {isSubmittingReview ? 'Submitting...' : 'Submit Review'}
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Reviews List */}
+                          <div className="space-y-4">
+                            {reviews.length > 0 ? (
+                              reviews.map((review) => (
+                                <div key={review.id} className="border rounded-lg p-4">
+                                  <div className="flex items-start justify-between mb-2">
+                                    <div>
+                                      <div className="flex items-center space-x-2 mb-1">
+                                        <h5 className="font-medium">{review.customerName}</h5>
+                                        <div className="flex items-center space-x-1">
+                                          {[1,2,3,4,5].map((star) => (
+                                            <Star 
+                                              key={star}
+                                              className={`w-4 h-4 ${
+                                                star <= review.rating 
+                                                  ? 'fill-primary text-primary' 
+                                                  : 'text-muted-foreground'
+                                              }`} 
+                                            />
+                                          ))}
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground">
+                                        {review.reviewDate.toLocaleDateString()}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  {review.comment && (
+                                    <p className="text-sm leading-relaxed">{review.comment}</p>
+                                  )}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-center py-8">
+                                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+                                  <Star className="w-6 h-6 text-muted-foreground" />
+                                </div>
+                                <p className="text-muted-foreground mb-2">No reviews yet</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Be the first to review this product!
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </CardContent>
               </Card>

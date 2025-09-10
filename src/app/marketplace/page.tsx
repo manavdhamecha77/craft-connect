@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { Search, Filter, Heart, MapPin, Star, Plus, Grid3X3, List } from "lucide-react";
+import { Search, Filter, Heart, MapPin, Star, Plus, Grid3X3, List, ShoppingBag } from "lucide-react";
 import { PageLayout } from "@/components/page-layout";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { getMarketplaceProducts, searchProducts, getFinalProductDisplay, type FirestoreProduct } from "@/lib/firestore-products";
+import { useCart } from "@/contexts/cart-context";
+import { useOrders } from "@/contexts/orders-context";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function MarketplacePage() {
   const [products, setProducts] = useState<FirestoreProduct[]>([]);
@@ -24,6 +27,10 @@ export default function MarketplacePage() {
   const [priceRange, setPriceRange] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("newest");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  
+  const { addToCart, isInCart } = useCart();
+  const { getProductAverageRating, getProductReviews } = useOrders();
+  const { user } = useAuth();
 
   const categories = ["all", "Saree", "Painting", "Pottery", "Jewelry", "Handicraft"];
 
@@ -103,6 +110,20 @@ export default function MarketplacePage() {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
+  };
+
+  const handleAddToCart = (product: FirestoreProduct) => {
+    const displayData = getFinalProductDisplay(product);
+    addToCart({
+      id: product.id!,
+      productId: product.id!,
+      name: displayData.title,
+      price: displayData.price || 0,
+      image: product.image,
+      artisan: product.artisanName || 'Unknown Artisan',
+      region: product.artisanRegion || 'Unknown Region',
+      maxQuantity: 1 // Since each product is unique, max quantity is 1
+    });
   };
 
   return (
@@ -238,8 +259,13 @@ export default function MarketplacePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map((product) => {
             const displayData = getFinalProductDisplay(product);
+            const averageRating = getProductAverageRating(product.id!);
+            const reviewCount = getProductReviews(product.id!).length;
+            const inCart = isInCart(product.id!);
+            const isOutOfStock = false; // For now, assume all products are in stock
+            
             return (
-              <Card key={product.id} className="group overflow-hidden hover:shadow-lg transition-all duration-300 border-0 shadow-md">
+              <Card key={product.id} className="group overflow-hidden hover:shadow-lg transition-all duration-300 border-0 shadow-md h-full flex flex-col">
                 <CardHeader className="p-0 relative">
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <Image 
@@ -248,6 +274,11 @@ export default function MarketplacePage() {
                       fill 
                       className="object-cover transition-transform duration-300 group-hover:scale-105" 
                     />
+                    {isOutOfStock && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <span className="text-white font-semibold">Out of Stock</span>
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <Button 
                       size="sm" 
@@ -258,38 +289,72 @@ export default function MarketplacePage() {
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <Badge variant="secondary" className="text-xs">{product.category}</Badge>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-primary">₹{displayData.price?.toLocaleString()}</p>
+                <CardContent className="p-4 flex-grow flex flex-col">
+                  <div className="flex-grow">
+                    <div className="flex items-start justify-between mb-2">
+                      <Badge variant="secondary" className="text-xs">{product.category}</Badge>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-primary">₹{displayData.price?.toLocaleString()}</p>
+                      </div>
                     </div>
+                    <CardTitle className="text-base font-semibold leading-tight mb-2 line-clamp-2">
+                      {displayData.title}
+                    </CardTitle>
+                    
+                    {/* Rating */}
+                    {averageRating > 0 && (
+                      <div className="flex items-center gap-1 mb-2">
+                        <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                        <span className="text-xs text-muted-foreground">
+                          {averageRating} ({reviewCount} review{reviewCount !== 1 ? 's' : ''})
+                        </span>
+                      </div>
+                    )}
+                    
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                      {displayData.description}
+                    </p>
+                    {(product.artisanName || product.artisanRegion) && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        {product.artisanRegion && (
+                          <>
+                            <MapPin className="w-3 h-3" />
+                            <span>{product.artisanRegion}</span>
+                          </>
+                        )}
+                        {product.artisanName && product.artisanRegion && <span>•</span>}
+                        {product.artisanName && <span>By {product.artisanName}</span>}
+                      </div>
+                    )}
                   </div>
-                  <CardTitle className="text-base font-semibold leading-tight mb-2 line-clamp-2">
-                    {displayData.title}
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                    {displayData.description}
-                  </p>
-                  {(product.artisanName || product.artisanRegion) && (
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      {product.artisanRegion && (
-                        <>
-                          <MapPin className="w-3 h-3" />
-                          <span>{product.artisanRegion}</span>
-                        </>
-                      )}
-                      {product.artisanName && product.artisanRegion && <span>•</span>}
-                      {product.artisanName && <span>By {product.artisanName}</span>}
-                    </div>
-                  )}
                 </CardContent>
-                <CardFooter className="p-4 pt-0">
-                  <Button asChild size="sm" className="w-full">
-                    <Link href={`/marketplace/${product.id}`}>
-                      View Details
-                    </Link>
-                  </Button>
+                <CardFooter className="p-4 pt-0 mt-auto">
+                  <div className="flex flex-col w-full space-y-2">
+                    {user?.role === 'customer' && (
+                      <Button 
+                        onClick={() => handleAddToCart(product)}
+                        disabled={isOutOfStock || inCart}
+                        className="w-full bg-[#FF9933] hover:bg-[#FF9933]/90"
+                        size="sm"
+                      >
+                        {inCart ? (
+                          <>Added to Cart</>
+                        ) : isOutOfStock ? (
+                          <>Out of Stock</>
+                        ) : (
+                          <>
+                            <ShoppingBag className="h-3 w-3 mr-1" />
+                            Add to Cart
+                          </>
+                        )}
+                      </Button>
+                    )}
+                    <Button asChild variant="outline" size="sm" className="w-full">
+                      <Link href={`/marketplace/${product.id}`}>
+                        View Details
+                      </Link>
+                    </Button>
+                  </div>
                 </CardFooter>
               </Card>
             );

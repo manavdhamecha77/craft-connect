@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { signInWithEmail, signUpWithEmail, signInWithGoogle } from "@/lib/auth-utils";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Sparkles, ShoppingBag, Users } from "lucide-react";
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
@@ -24,6 +26,11 @@ export function AuthForm() {
   const [isLoading, setIsLoading] = React.useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Get role from URL parameters
+  const userRole = searchParams.get('role') || 'customer'; // Default to customer
+  const isArtisan = userRole === 'artisan';
 
   const nameRef = React.useRef<HTMLInputElement>(null);
   const emailRef = React.useRef<HTMLInputElement>(null);
@@ -32,11 +39,18 @@ export function AuthForm() {
   const toggleForm = () => setIsLogin(!isLogin);
 
   const onAuthSuccess = () => {
+    // Store user role in localStorage for future reference
+    localStorage.setItem('userRole', userRole);
+    
+    const redirectPath = isArtisan ? '/dashboard' : '/marketplace';
+    const roleLabel = isArtisan ? 'Artisan Dashboard' : 'Marketplace';
+    
     toast({
       title: "Authentication Successful",
-      description: "Welcome! Redirecting you to the dashboard.",
+      description: `Welcome! Redirecting you to the ${roleLabel}.`,
     });
-    router.push("/");
+    
+    router.push(redirectPath);
   };
   
   const onAuthFailure = (error: string) => {
@@ -98,12 +112,43 @@ export function AuthForm() {
 
   return (
     <div className="flex flex-col space-y-6">
-       <div className="flex flex-col space-y-2 text-center">
+       <div className="flex flex-col space-y-3 text-center">
+            {/* Role Badge */}
+            <div className="flex justify-center">
+              <Badge 
+                variant="secondary" 
+                className={cn(
+                  "px-4 py-2",
+                  isArtisan 
+                    ? "bg-[#FF9933]/10 text-[#4B0082] border-[#FF9933]/20" 
+                    : "bg-[#4B0082]/10 text-[#4B0082] border-[#4B0082]/20"
+                )}
+              >
+                {isArtisan ? (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Joining as Artisan
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="h-4 w-4 mr-2" />
+                    Joining as Customer
+                  </>
+                )}
+              </Badge>
+            </div>
+            
             <h1 className="text-2xl font-semibold tracking-tight">
-              {isLogin ? 'Welcome Back' : 'Create an Account'}
+              {isLogin ? 'Welcome Back' : `Create ${isArtisan ? 'Artisan' : 'Customer'} Account`}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {isLogin ? 'Enter your credentials to access your dashboard.' : 'Enter your email below to create your account.'}
+              {isLogin ? (
+                `Enter your credentials to access your ${isArtisan ? 'artisan dashboard' : 'marketplace'}.`
+              ) : (
+                isArtisan 
+                  ? 'Join thousands of artisans using AI to grow their craft business.'
+                  : 'Discover authentic handcrafted products from talented artisans.'
+              )}
             </p>
         </div>
       <div
@@ -172,15 +217,30 @@ export function AuthForm() {
             Continue with Google
         </Button>
       </div>
-       <p className="px-8 text-center text-sm text-muted-foreground">
-          <button
-            onClick={toggleForm}
-            className="underline underline-offset-4 hover:text-primary"
-            disabled={isLoading}
-          >
-            {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
-          </button>
-        </p>
+       <div className="space-y-2">
+         <p className="px-8 text-center text-sm text-muted-foreground">
+            <button
+              onClick={toggleForm}
+              className="underline underline-offset-4 hover:text-primary"
+              disabled={isLoading}
+            >
+              {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
+            </button>
+          </p>
+          <p className="px-8 text-center text-xs text-muted-foreground">
+            {isArtisan ? "Looking to shop? " : "Want to sell your crafts? "}
+            <button
+              onClick={() => {
+                const newRole = isArtisan ? 'customer' : 'artisan';
+                router.push(`/auth?role=${newRole}`);
+              }}
+              className="underline underline-offset-4 hover:text-primary"
+              disabled={isLoading}
+            >
+              {isArtisan ? "Join as Customer" : "Join as Artisan"}
+            </button>
+          </p>
+        </div>
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "@/hooks/use-auth";
+import { CartProvider } from "@/contexts/cart-context";
+import { OrdersProvider } from "@/contexts/orders-context";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
@@ -23,7 +25,11 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
-            {children}
+          <CartProvider>
+            <OrdersProvider>
+              {children}
+            </OrdersProvider>
+          </CartProvider>
         </AuthProvider>
         <Toaster />
       </body>
