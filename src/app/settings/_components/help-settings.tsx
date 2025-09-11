@@ -1,10 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { 
   HelpCircle, 
   MessageCircle, 
@@ -20,12 +23,76 @@ import {
 
 export function HelpSettings() {
   const { toast } = useToast();
+  
+  // State for dialogs
+  const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
+  const [isFeatureDialogOpen, setIsFeatureDialogOpen] = useState(false);
+  
+  // State for rating
+  const [rating, setRating] = useState(0);
+  const [hoveredRating, setHoveredRating] = useState(0);
+  const [reviewText, setReviewText] = useState("");
+  
+  // State for feature suggestion
+  const [featureText, setFeatureText] = useState("");
 
   const handleContactSupport = () => {
     toast({
       title: "Support Request",
       description: "We'll get back to you within 24 hours.",
     });
+  };
+
+  const handleHelpAction = (action: string) => {
+    switch (action) {
+      case "Read Guide":
+        toast({
+          title: "Getting Started Guide",
+          description: "Welcome to CraftConnect! Create your profile → Upload product photos → Use AI tools to generate descriptions → Add cultural stories → Set pricing → Publish to marketplace. Our AI assists you at every step to showcase your craft beautifully.",
+        });
+        break;
+      case "View Tips":
+        toast({
+          title: "Photography Tips",
+          description: "📸 Use natural light when possible • Take multiple angles (front, back, detail shots) • Show scale with everyday objects • Highlight unique textures and patterns • Clean backgrounds work best • Show the craft process if possible.",
+        });
+        break;
+      case "Read Guidelines":
+        toast({
+          title: "Community Guidelines",
+          description: "🎨 Only authentic handcrafted items • Respect cultural heritage • Use original photos • Price fairly • Respond to customers promptly • Share genuine stories behind your craft • Help fellow artisans grow together.",
+        });
+        break;
+      case "Terms of Service":
+        toast({
+          title: "Terms of Service",
+          description: "By using CraftConnect, you agree to our platform terms: Authentic handcrafted items only • Respect intellectual property • Fair pricing • Accurate descriptions • Timely order fulfillment • Community respect. Full terms available on our website.",
+        });
+        break;
+      case "Privacy Policy":
+        toast({
+          title: "Privacy Policy",
+          description: "We protect your data: Personal info secured with encryption • Photos used only for marketplace display • Payment details processed securely • We don't sell your data • You control your profile visibility • Contact us anytime about your data.",
+        });
+        break;
+    }
+  };
+
+  const handleFAQAction = (question: string) => {
+    switch (question) {
+      case "How do I add cultural stories to my products?":
+        toast({
+          title: "Cultural Stories",
+          description: "Cultural stories are automatically generated when you use our AI features in the Catalog Builder. Our AI creates authentic narratives based on your craft details, region, and techniques.",
+        });
+        break;
+      case "How can I promote my artisan profile?":
+        toast({
+          title: "Promote Your Profile",
+          description: "Use the AI tools in our Catalog Builder to create compelling product descriptions, generate social media content, and craft engaging stories. Our AI helps optimize your listings for better visibility.",
+        });
+        break;
+    }
   };
 
   const helpSections = [
@@ -40,8 +107,8 @@ export function HelpSettings() {
       icon: <Video className="h-5 w-5" />,
       title: "Video Tutorials",
       description: "Step-by-step video guides for common tasks",
-      badge: "New",
-      action: "Watch Videos"
+      badge: "Coming Soon",
+      action: "Coming Soon"
     },
     {
       icon: <FileText className="h-5 w-5" />,
@@ -63,16 +130,8 @@ export function HelpSettings() {
       category: "Products"
     },
     {
-      question: "What payment methods are accepted?",
-      category: "Payments"
-    },
-    {
       question: "How can I promote my artisan profile?",
       category: "Marketing"
-    },
-    {
-      question: "What are the commission rates?",
-      category: "Fees"
     }
   ];
 
@@ -146,7 +205,14 @@ export function HelpSettings() {
                     <div className="flex items-center space-x-2">
                       <p className="font-medium">{section.title}</p>
                       {section.badge && (
-                        <Badge variant={section.badge === "New" ? "default" : "secondary"} className="text-xs">
+                        <Badge 
+                          variant={
+                            section.badge === "New" ? "default" : 
+                            section.badge === "Coming Soon" ? "outline" : 
+                            "secondary"
+                          } 
+                          className="text-xs"
+                        >
                           {section.badge}
                         </Badge>
                       )}
@@ -154,9 +220,14 @@ export function HelpSettings() {
                     <p className="text-sm text-muted-foreground">{section.description}</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={section.action === "Coming Soon"}
+                  onClick={() => section.action !== "Coming Soon" && handleHelpAction(section.action)}
+                >
                   {section.action}
-                  <ExternalLink className="h-3 w-3 ml-2" />
+                  {section.action !== "Coming Soon" && <ExternalLink className="h-3 w-3 ml-2" />}
                 </Button>
               </div>
             ))}
@@ -185,7 +256,11 @@ export function HelpSettings() {
                     </Badge>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => handleFAQAction(item.question)}
+                >
                   View Answer
                 </Button>
               </div>
@@ -214,30 +289,114 @@ export function HelpSettings() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Button variant="outline" className="justify-start">
-              <Star className="h-4 w-4 mr-2" />
-              Rate Your Experience
-            </Button>
-            
-            <Button variant="outline" className="justify-start">
-              <MessageCircle className="h-4 w-4 mr-2" />
-              Suggest a Feature
-            </Button>
-          </div>
-          
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-start space-x-3">
-              <HelpCircle className="h-5 w-5 text-blue-500 mt-0.5" />
-              <div>
-                <p className="font-medium text-blue-800">Join Our Beta Program</p>
-                <p className="text-sm text-blue-600">
-                  Be the first to try new features and help shape the future of our platform.
-                </p>
-                <Button size="sm" className="mt-2 bg-blue-600 hover:bg-blue-700">
-                  Learn More
+            {/* Rate Your Experience */}
+            <Dialog open={isRatingDialogOpen} onOpenChange={setIsRatingDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="justify-start">
+                  <Star className="h-4 w-4 mr-2" />
+                  Rate Your Experience
                 </Button>
-              </div>
-            </div>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Rate Your Experience</DialogTitle>
+                  <DialogDescription>Tell us how we're doing. Your feedback helps us improve.</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {/* Star Rating */}
+                  <div className="flex items-center space-x-1">
+                    {[1,2,3,4,5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        className={`text-2xl ${ (hoveredRating || rating) >= star ? 'text-yellow-500' : 'text-gray-300' }`}
+                        onMouseEnter={() => setHoveredRating(star)}
+                        onMouseLeave={() => setHoveredRating(0)}
+                        onClick={() => setRating(star)}
+                        aria-label={`Rate ${star} star${star>1?'s':''}`}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Review Text */}
+                  <div className="space-y-2">
+                    <Label htmlFor="review">Your review</Label>
+                    <Textarea 
+                      id="review"
+                      placeholder="Share your experience..."
+                      value={reviewText}
+                      onChange={(e) => setReviewText(e.target.value)}
+                      rows={4}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button 
+                    onClick={() => {
+                      if (rating === 0) {
+                        toast({ variant: 'destructive', title: 'Please select a rating' });
+                        return;
+                      }
+                      toast({
+                        title: 'Thanks for your feedback! ⭐',
+                        description: `Rating: ${rating}/5` + (reviewText ? ` • "${reviewText}"` : ''),
+                      });
+                      setIsRatingDialogOpen(false);
+                      setRating(0);
+                      setReviewText('');
+                    }}
+                  >
+                    Submit
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
+            {/* Suggest a Feature */}
+            <Dialog open={isFeatureDialogOpen} onOpenChange={setIsFeatureDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="justify-start">
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Suggest a Feature
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Suggest a Feature</DialogTitle>
+                  <DialogDescription>Have an idea? We'd love to hear it.</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-2">
+                  <Label htmlFor="feature">Feature suggestion</Label>
+                  <Textarea 
+                    id="feature"
+                    placeholder="Describe the feature you'd like to see..."
+                    value={featureText}
+                    onChange={(e) => setFeatureText(e.target.value)}
+                    rows={4}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button 
+                    onClick={() => {
+                      if (!featureText.trim()) {
+                        toast({ variant: 'destructive', title: 'Please describe your feature idea' });
+                        return;
+                      }
+                      toast({
+                        title: 'Thanks for the suggestion! 💡',
+                        description: 'We have received your feature request.',
+                      });
+                      setIsFeatureDialogOpen(false);
+                      setFeatureText('');
+                    }}
+                  >
+                    Submit
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>
@@ -268,14 +427,19 @@ export function HelpSettings() {
           </div>
           
           <div className="flex space-x-2">
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleHelpAction("Terms of Service")}
+            >
               Terms of Service
             </Button>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleHelpAction("Privacy Policy")}
+            >
               Privacy Policy
-            </Button>
-            <Button variant="outline" size="sm">
-              Release Notes
             </Button>
           </div>
         </CardContent>
