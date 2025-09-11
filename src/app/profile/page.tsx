@@ -42,6 +42,12 @@ const INDIAN_STATES = [
   "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"
 ];
 
+const SPECIALIZATIONS = [
+  "Textiles & Weaving", "Pottery & Ceramics", "Jewelry Making", "Wood Carving",
+  "Metal Work", "Painting", "Embroidery", "Leather Craft", "Stone Carving",
+  "Basket Weaving", "Glass Work", "Paper Craft", "Fabric Dyeing", "Sculpture"
+];
+
 export default function ProfilePage() {
   const router = useRouter();
   const { user, updateArtisanProfile } = useAuth();
@@ -473,42 +479,42 @@ export default function ProfilePage() {
             <CardHeader className="text-center">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl font-bold text-white">
-                  {profile.name ? profile.name.charAt(0).toUpperCase() : "A"}
+                  {artisanProfile.name ? artisanProfile.name.charAt(0).toUpperCase() : "A"}
                 </span>
               </div>
                 <CardTitle className="text-xl">{artisanProfile.name || "Artisan"}</CardTitle>
               <div className="flex flex-col items-center space-y-2">
-                {profile.specialization && (
+                {artisanProfile.specialization && (
                   <Badge variant="secondary" className="flex items-center space-x-1">
                     <Palette className="h-3 w-3" />
-                    <span>{profile.specialization}</span>
+                    <span>{artisanProfile.specialization}</span>
                   </Badge>
                 )}
-                {(profile.region || profile.state) && (
+                {(artisanProfile.region || artisanProfile.state) && (
                   <Badge variant="outline" className="flex items-center space-x-1">
                     <MapPin className="h-3 w-3" />
-                    <span>{profile.region}{profile.state ? `, ${profile.state}` : ""}</span>
+                    <span>{artisanProfile.region}{artisanProfile.state ? `, ${artisanProfile.state}` : ""}</span>
                   </Badge>
                 )}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {profile.experience && (
+              {artisanProfile.experience && (
                 <div className="flex items-center space-x-2 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-muted-foreground">Experience:</span>
-                  <span className="font-medium">{profile.experience}</span>
+                  <span className="font-medium">{artisanProfile.experience}</span>
                 </div>
               )}
               
-              {profile.techniques.length > 0 && (
+              {artisanProfile.techniques.length > 0 && (
                 <div>
                   <div className="flex items-center space-x-2 text-sm mb-2">
                     <Award className="h-4 w-4 text-muted-foreground" />
                     <span className="font-medium">Skills & Techniques</span>
                   </div>
                   <div className="flex flex-wrap gap-1">
-                    {profile.techniques.map((technique, index) => (
+                    {artisanProfile.techniques.map((technique, index) => (
                       <Badge key={index} variant="outline" className="text-xs">
                         {technique}
                       </Badge>
@@ -536,12 +542,12 @@ export default function ProfilePage() {
                     {isEditing ? (
                       <Input
                         id="name"
-                        value={profile.name}
-                        onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
+                        value={artisanProfile.name}
+                        onChange={(e) => setArtisanProfile(prev => ({ ...prev, name: e.target.value }))}
                         className="mt-2"
                       />
                     ) : (
-                      <p className="mt-2 text-sm">{profile.name || "Not provided"}</p>
+                      <p className="mt-2 text-sm">{artisanProfile.name || "Not provided"}</p>
                     )}
                   </div>
                   
@@ -550,13 +556,13 @@ export default function ProfilePage() {
                     {isEditing ? (
                       <Input
                         id="experience"
-                        value={profile.experience}
-                        onChange={(e) => setProfile(prev => ({ ...prev, experience: e.target.value }))}
+                        value={artisanProfile.experience}
+                        onChange={(e) => setArtisanProfile(prev => ({ ...prev, experience: e.target.value }))}
                         placeholder="e.g., 10 years"
                         className="mt-2"
                       />
                     ) : (
-                      <p className="mt-2 text-sm">{profile.experience || "Not specified"}</p>
+                      <p className="mt-2 text-sm">{artisanProfile.experience || "Not specified"}</p>
                     )}
                   </div>
                 </div>
@@ -565,7 +571,7 @@ export default function ProfilePage() {
                   <div>
                     <Label htmlFor="state">State</Label>
                     {isEditing ? (
-                      <Select value={profile.state} onValueChange={(value) => setProfile(prev => ({ ...prev, state: value }))}>
+                      <Select value={artisanProfile.state} onValueChange={(value) => setArtisanProfile(prev => ({ ...prev, state: value }))}>
                         <SelectTrigger className="mt-2">
                           <SelectValue placeholder="Select state" />
                         </SelectTrigger>
@@ -576,7 +582,7 @@ export default function ProfilePage() {
                         </SelectContent>
                       </Select>
                     ) : (
-                      <p className="mt-2 text-sm">{profile.state || "Not provided"}</p>
+                      <p className="mt-2 text-sm">{artisanProfile.state || "Not provided"}</p>
                     )}
                   </div>
 
@@ -585,13 +591,13 @@ export default function ProfilePage() {
                     {isEditing ? (
                       <Input
                         id="region"
-                        value={profile.region}
-                        onChange={(e) => setProfile(prev => ({ ...prev, region: e.target.value }))}
+                        value={artisanProfile.region}
+                        onChange={(e) => setArtisanProfile(prev => ({ ...prev, region: e.target.value }))}
                         placeholder="e.g., Jaipur, Kutch"
                         className="mt-2"
                       />
                     ) : (
-                      <p className="mt-2 text-sm">{profile.region || "Not provided"}</p>
+                      <p className="mt-2 text-sm">{artisanProfile.region || "Not provided"}</p>
                     )}
                   </div>
                 </div>
@@ -599,7 +605,7 @@ export default function ProfilePage() {
                 <div>
                   <Label htmlFor="specialization">Primary Specialization</Label>
                   {isEditing ? (
-                    <Select value={profile.specialization} onValueChange={(value) => setProfile(prev => ({ ...prev, specialization: value }))}>
+                    <Select value={artisanProfile.specialization} onValueChange={(value) => setArtisanProfile(prev => ({ ...prev, specialization: value }))}>
                       <SelectTrigger className="mt-2">
                         <SelectValue placeholder="Select specialization" />
                       </SelectTrigger>
@@ -610,7 +616,7 @@ export default function ProfilePage() {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <p className="mt-2 text-sm">{profile.specialization || "Not specified"}</p>
+                    <p className="mt-2 text-sm">{artisanProfile.specialization || "Not specified"}</p>
                   )}
                 </div>
               </CardContent>
@@ -637,7 +643,7 @@ export default function ProfilePage() {
                       <Button onClick={addTechnique}>Add</Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {profile.techniques.map((technique, index) => (
+                      {artisanProfile.techniques.map((technique, index) => (
                         <Badge 
                           key={index} 
                           variant="secondary" 
@@ -651,8 +657,8 @@ export default function ProfilePage() {
                   </>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {profile.techniques.length > 0 ? (
-                      profile.techniques.map((technique, index) => (
+                    {artisanProfile.techniques.length > 0 ? (
+                      artisanProfile.techniques.map((technique, index) => (
                         <Badge key={index} variant="secondary">{technique}</Badge>
                       ))
                     ) : (
@@ -677,14 +683,14 @@ export default function ProfilePage() {
                   {isEditing ? (
                     <Textarea
                       id="bio"
-                      value={profile.bio}
-                      onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
+                      value={artisanProfile.bio}
+                      onChange={(e) => setArtisanProfile(prev => ({ ...prev, bio: e.target.value }))}
                       placeholder="Tell your story..."
                       rows={4}
                       className="mt-2"
                     />
                   ) : (
-                    <p className="mt-2 text-sm whitespace-pre-wrap">{profile.bio || "No biography provided"}</p>
+                    <p className="mt-2 text-sm whitespace-pre-wrap">{artisanProfile.bio || "No biography provided"}</p>
                   )}
                 </div>
 
@@ -693,14 +699,14 @@ export default function ProfilePage() {
                   {isEditing ? (
                     <Textarea
                       id="inspiration"
-                      value={profile.inspiration}
-                      onChange={(e) => setProfile(prev => ({ ...prev, inspiration: e.target.value }))}
+                      value={artisanProfile.inspiration}
+                      onChange={(e) => setArtisanProfile(prev => ({ ...prev, inspiration: e.target.value }))}
                       placeholder="Share your inspiration..."
                       rows={3}
                       className="mt-2"
                     />
                   ) : (
-                    <p className="mt-2 text-sm whitespace-pre-wrap">{profile.inspiration || "Not specified"}</p>
+                    <p className="mt-2 text-sm whitespace-pre-wrap">{artisanProfile.inspiration || "Not specified"}</p>
                   )}
                 </div>
 
@@ -709,14 +715,14 @@ export default function ProfilePage() {
                   {isEditing ? (
                     <Textarea
                       id="goals"
-                      value={profile.goals}
-                      onChange={(e) => setProfile(prev => ({ ...prev, goals: e.target.value }))}
+                      value={artisanProfile.goals}
+                      onChange={(e) => setArtisanProfile(prev => ({ ...prev, goals: e.target.value }))}
                       placeholder="What do you hope to achieve?"
                       rows={2}
                       className="mt-2"
                     />
                   ) : (
-                    <p className="mt-2 text-sm whitespace-pre-wrap">{profile.goals || "Not specified"}</p>
+                    <p className="mt-2 text-sm whitespace-pre-wrap">{artisanProfile.goals || "Not specified"}</p>
                   )}
                 </div>
               </CardContent>
