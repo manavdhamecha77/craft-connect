@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Search, Filter, Heart, MapPin, Star, Plus, Grid3X3, List, ShoppingBag } from "lucide-react";
 import { PageLayout } from "@/components/page-layout";
 import { PageHeader } from "@/components/page-header";
@@ -13,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getMarketplaceProducts, searchProducts, getFinalProductDisplay, type FirestoreProduct } from "@/lib/firestore-products";
 import { useCart } from "@/contexts/cart-context";
 import { useOrders } from "@/contexts/orders-context";
@@ -27,10 +29,12 @@ export default function MarketplacePage() {
   const [priceRange, setPriceRange] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("newest");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   
   const { addToCart, isInCart } = useCart();
   const { getProductAverageRating, getProductReviews } = useOrders();
   const { user } = useAuth();
+  const router = useRouter();
 
   const categories = ["all", "Saree", "Painting", "Pottery", "Jewelry", "Handicraft"];
 
@@ -143,11 +147,20 @@ export default function MarketplacePage() {
                 className="pl-10 h-12" 
               />
             </div>
-            <Button asChild size="lg" className="h-12">
-              <Link href="/catalog-builder">
-                <Plus className="h-4 w-4 mr-2" />
-                List Your Products
-              </Link>
+            <Button 
+              size="lg" 
+              className="h-12"
+              onClick={(e) => {
+                if (user?.role === 'customer') {
+                  e.preventDefault();
+                  setRoleDialogOpen(true);
+                } else {
+                  router.push('/catalog-builder');
+                }
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              List Your Products
             </Button>
           </div>
         </div>
@@ -249,8 +262,17 @@ export default function MarketplacePage() {
                   Clear Filters
                 </Button>
               )}
-              <Button asChild>
-                <Link href="/catalog-builder">List Your Products</Link>
+              <Button 
+                onClick={(e) => {
+                  if (user?.role === 'customer') {
+                    e.preventDefault();
+                    setRoleDialogOpen(true);
+                  } else {
+                    router.push('/catalog-builder');
+                  }
+                }}
+              >
+                List Your Products
               </Button>
             </div>
           </div>
@@ -409,7 +431,25 @@ export default function MarketplacePage() {
           })}
         </div>
       )}
+
+      {/* Role restriction dialog */}
+      <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Artisan account required</DialogTitle>
+            <DialogDescription>
+              You need to be an artisan to list your product. Please switch your account role to artisan or contact support to upgrade your profile.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setRoleDialogOpen(false)}>Close</Button>
+            <Button onClick={() => {
+              setRoleDialogOpen(false);
+              // Optionally guide user to profile/settings if available in app
+            }}>Ok</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </PageLayout>
   );
 }
-
