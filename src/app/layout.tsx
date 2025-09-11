@@ -3,6 +3,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { CartProvider } from "@/contexts/cart-context";
 import { OrdersProvider } from "@/contexts/orders-context";
 import { Toaster } from "@/components/ui/toaster";
+import { ArtisanChatbot } from "@/components/artisan-chatbot";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -28,6 +29,7 @@ export default function RootLayout({
           <CartProvider>
             <OrdersProvider>
               {children}
+              <ArtisanChatbot />
             </OrdersProvider>
           </CartProvider>
         </AuthProvider>
