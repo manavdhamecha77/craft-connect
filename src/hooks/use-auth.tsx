@@ -11,6 +11,7 @@ import {
 import { auth } from "@/lib/firebase";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "./use-toast";
+import { getUserProfile, createUserProfile, updateUserProfile } from "@/lib/user-management";
 
 
 export interface ArtisanUser extends User {
@@ -44,27 +45,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // Load user role from localStorage
-        const userRole = localStorage.getItem('userRole') as 'artisan' | 'customer' || 'customer';
-        
-        // Load artisan profile from localStorage or set defaults
-        const savedProfile = localStorage.getItem(`artisan_profile_${firebaseUser.uid}`);
-        const artisanProfile = savedProfile ? JSON.parse(savedProfile) : {
-          name: userRole === 'artisan' ? 'Anonymous Artisan' : firebaseUser.displayName || 'Customer',
-          region: 'Unknown Region'
-        };
-
-        setUser({
-          ...firebaseUser,
-          role: userRole,
-          artisanProfile
-        } as ArtisanUser);
+        try {
+          // Load user profile from Firestore
+          let userProfile = await getUserProfile(firebaseUser.uid);
+          
+          // If no profile exists, set user with a special flag to trigger migration
+          if (!userProfile) {
+            // Mark user as needing profile migration
+            setUser({
+              ...firebaseUser,
+              role: 'customer', // Default role
+              artisanProfile: {
+                name: firebaseUser.displayName || 'Anonymous User',
+                region: 'Unknown Region'
+              },
+              needsProfileMigration: true // Custom flag for migration
+            } as ArtisanUser & { needsProfileMigration: boolean });
+            setLoading(false);
+            return;
+          }
+          
+          if (userProfile) {
+            setUser({
+              ...firebaseUser,
+              role: userProfile.role,
+              artisanProfile: userProfile.artisanProfile || {
+                name: firebaseUser.displayName || 'Anonymous User',
+                region: 'Unknown Region'
+              }
+            } as ArtisanUser);
+          } else {
+            // Fallback - should not happen
+            setUser({
+              ...firebaseUser,
+              role: 'customer',
+              artisanProfile: {
+                name: firebaseUser.displayName || 'Customer',
+                region: 'Unknown Region'
+              }
+            } as ArtisanUser);
+          }
+        } catch (error) {
+          console.error('Error loading user profile:', error);
+          // Fallback to basic user data
+          setUser({
+            ...firebaseUser,
+            role: 'customer',
+            artisanProfile: {
+              name: firebaseUser.displayName || 'Customer',
+              region: 'Unknown Region'
+            }
+          } as ArtisanUser);
+        }
       } else {
         setUser(null);
         // If user is not authenticated and trying to access protected routes
-        const protectedRoutes = ['/dashboard', '/products', '/orders', '/profile', '/onboarding'];
+        const protectedRoutes = ['/dashboard', '/products', '/orders', '/profile', '/onboarding', '/catalog-builder'];
         const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
         
         if (isProtectedRoute && pathname !== '/auth') {
@@ -77,12 +115,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, [pathname, router]);
 
+  // Handle profile migration redirection
+  useEffect(() => {
+    if (!loading && user && (user as any).needsProfileMigration) {
+      // Redirect to migration page if user needs profile setup
+      if (pathname !== '/migrate') {
+        router.replace('/migrate');
+      }
+    }
+  }, [user, loading, router, pathname]);
+
   // Handle browser history navigation
   useEffect(() => {
     const handlePopState = () => {
       // If user is not authenticated and trying to go back to protected routes
       if (!user && !loading) {
-        const protectedRoutes = ['/dashboard', '/products', '/orders', '/profile', '/onboarding'];
+        const protectedRoutes = ['/dashboard', '/products', '/orders', '/profile', '/onboarding', '/catalog-builder'];
         const isProtectedRoute = protectedRoutes.some(route => window.location.pathname.startsWith(route));
         
         if (isProtectedRoute) {
@@ -124,21 +172,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateArtisanProfile = (profile: ArtisanUser['artisanProfile']) => {
+  const updateArtisanProfile = async (profile: ArtisanUser['artisanProfile']) => {
     if (!user) return;
 
-    const updatedUser = {
-      ...user,
-      artisanProfile: profile
-    };
+    try {
+      // Update in Firestore
+      await updateUserProfile(user.uid, { artisanProfile: profile });
+      
+      const updatedUser = {
+        ...user,
+        artisanProfile: profile
+      };
 
-    setUser(updatedUser);
+      setUser(updatedUser);
 
-    // Save to localStorage
-    localStorage.setItem(
-      `artisan_profile_${user.uid}`,
-      JSON.stringify(profile)
-    );
+      // Keep localStorage as backup
+      localStorage.setItem(
+        `artisan_profile_${user.uid}`,
+        JSON.stringify(profile)
+      );
+    } catch (error) {
+      console.error('Error updating artisan profile:', error);
+      toast({
+        variant: "destructive",
+        title: "Profile Update Failed",
+        description: "Failed to update your profile. Please try again.",
+      });
+    }
   };
 
   const value = { user, loading, signOut, signInAsGuest, updateArtisanProfile };
@@ -162,14 +222,21 @@ export function useCurrentArtisanId(): string | null {
 
 // Custom hook to check if user is authenticated
 export function useRequireAuth() {
-  const { user, loading, signInAsGuest } = useAuth();
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!loading && !user) {
-      // Automatically sign in as anonymous user for demo purposes
-      signInAsGuest();
+      // Redirect to auth page if not authenticated
+      const protectedRoutes = ['/dashboard', '/products', '/orders', '/profile', '/onboarding', '/catalog-builder'];
+      const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+      
+      if (isProtectedRoute) {
+        router.replace('/auth');
+      }
     }
-  }, [loading, user, signInAsGuest]);
+  }, [loading, user, router, pathname]);
 
   return { user, loading };
 }

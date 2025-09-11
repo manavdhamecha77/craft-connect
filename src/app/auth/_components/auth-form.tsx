@@ -42,8 +42,11 @@ export function AuthForm() {
     // Store user role in localStorage for future reference
     localStorage.setItem('userRole', userRole);
     
-    const redirectPath = isArtisan ? '/dashboard' : '/marketplace';
-    const roleLabel = isArtisan ? 'Artisan Dashboard' : 'Marketplace';
+    // For new signups (not login), redirect artisans to onboarding
+    const redirectPath = (!isLogin && isArtisan) ? '/onboarding' : 
+                         (isArtisan ? '/dashboard' : '/marketplace');
+    const roleLabel = (!isLogin && isArtisan) ? 'Artisan Onboarding' : 
+                     (isArtisan ? 'Artisan Dashboard' : 'Marketplace');
     
     toast({
       title: "Authentication Successful",
@@ -55,11 +58,14 @@ export function AuthForm() {
   };
   
   const onAuthFailure = (error: string) => {
-     toast({
-        variant: "destructive",
-        title: "Authentication Failed",
-        description: error,
-      });
+    // Check if it's a role conflict error
+    const isRoleConflict = error.toLowerCase().includes('artisan') || error.toLowerCase().includes('customer');
+    
+    toast({
+      variant: "destructive",
+      title: isRoleConflict ? "Role Mismatch" : "Authentication Failed",
+      description: error,
+    });
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -77,7 +83,7 @@ export function AuthForm() {
 
     let result;
     if (isLogin) {
-      result = await signInWithEmail(email, password);
+      result = await signInWithEmail(email, password, userRole as 'artisan' | 'customer');
     } else {
       const name = nameRef.current?.value;
       if (!name) {
@@ -85,7 +91,7 @@ export function AuthForm() {
         setIsLoading(false);
         return;
       }
-      result = await signUpWithEmail(email, password, name);
+      result = await signUpWithEmail(email, password, name, userRole as 'artisan' | 'customer');
     }
 
     if (result.error) {
@@ -100,7 +106,7 @@ export function AuthForm() {
   const handleGoogleAuth = async () => {
     setIsLoading(true);
     
-    const result = await signInWithGoogle();
+    const result = await signInWithGoogle(userRole as 'artisan' | 'customer');
     
     if (result.error) {
       onAuthFailure(result.error);

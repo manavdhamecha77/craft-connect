@@ -9,6 +9,7 @@ import {
   UserCredential 
 } from "firebase/auth";
 import { auth } from "./firebase";
+import { createUserProfile, validateUserRole, getUserProfile } from "./user-management";
 
 export type AuthResult = {
   user?: {
@@ -24,7 +25,8 @@ export const googleProvider = new GoogleAuthProvider();
 export async function signUpWithEmail(
   email: string, 
   password: string, 
-  displayName: string
+  displayName: string,
+  role: 'artisan' | 'customer'
 ): Promise<AuthResult> {
   try {
     const userCredential: UserCredential = await createUserWithEmailAndPassword(
@@ -35,8 +37,15 @@ export async function signUpWithEmail(
     
     // Update the user's profile with display name
     await updateProfile(userCredential.user, { displayName });
-    
+
     const { uid, email: userEmail, displayName: userDisplayName } = userCredential.user;
+
+    // Create a user profile with selected role
+    const profileResult = await createUserProfile(uid, userEmail || '', userDisplayName || '', role);
+    if (!profileResult.success) {
+      return { error: profileResult.error };
+    }
+
     return { 
       user: { 
         uid, 
@@ -52,7 +61,8 @@ export async function signUpWithEmail(
 
 export async function signInWithEmail(
   email: string, 
-  password: string
+  password: string,
+  expectedRole?: 'artisan' | 'customer'
 ): Promise<AuthResult> {
   try {
     const userCredential: UserCredential = await signInWithEmailAndPassword(
@@ -62,6 +72,15 @@ export async function signInWithEmail(
     );
     
     const { uid, email: userEmail, displayName } = userCredential.user;
+
+    // If expectedRole provided, validate against stored profile
+    if (expectedRole) {
+      const validation = await validateUserRole(uid, expectedRole);
+      if (!validation.valid) {
+        return { error: validation.error || 'Role mismatch. Please sign in with the correct role.' };
+      }
+    }
+
     return { 
       user: { 
         uid, 
@@ -75,10 +94,29 @@ export async function signInWithEmail(
   }
 }
 
-export async function signInWithGoogle(): Promise<AuthResult> {
+export async function signInWithGoogle(expectedRole?: 'artisan' | 'customer'): Promise<AuthResult> {
   try {
     const userCredential: UserCredential = await signInWithPopup(auth, googleProvider);
     const { uid, email, displayName } = userCredential.user;
+
+    // Only validate role if expectedRole is provided and user has a profile
+    if (expectedRole) {
+      const existingProfile = await getUserProfile(uid);
+      
+      if (!existingProfile) {
+        // New user - create profile with selected role
+        const profileResult = await createUserProfile(uid, email || '', displayName || '', expectedRole);
+        if (!profileResult.success) {
+          return { error: profileResult.error };
+        }
+      } else {
+        // Existing user - validate role
+        const validation = await validateUserRole(uid, expectedRole);
+        if (!validation.valid) {
+          return { error: validation.error || 'Role mismatch. Please sign in with the correct role.' };
+        }
+      }
+    }
     
     return { 
       user: { 
