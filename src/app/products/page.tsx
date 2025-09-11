@@ -40,6 +40,7 @@ import {
   getArtisanProducts, 
   updateProductStatus, 
   deleteProduct, 
+  getFinalProductDisplay,
   type FirestoreProduct 
 } from "@/lib/firestore-products";
 import { useCurrentArtisanId, useRequireAuth } from "@/hooks/use-auth";
@@ -73,6 +74,53 @@ const useProducts = () => {
   
   useEffect(() => {
     fetchProducts();
+  }, [artisanId, selectedStatus]);
+
+  // Add effect to refresh data when page becomes visible (user returns from edit page)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Page became visible, refresh data
+        fetchProducts();
+      }
+    };
+
+    const handleFocus = () => {
+      // Window regained focus, refresh data
+      fetchProducts();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [artisanId, selectedStatus]);
+
+  // Listen for localStorage changes to refresh data when needed
+  useEffect(() => {
+    const handleStorageChange = () => {
+      if (localStorage.getItem('productDataNeedsRefresh')) {
+        fetchProducts();
+        localStorage.removeItem('productDataNeedsRefresh');
+      }
+    };
+
+    // Check on mount
+    handleStorageChange();
+
+    // Listen for storage events from other tabs/windows
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Custom event for same-tab localStorage changes
+    window.addEventListener('localStorageChanged', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('localStorageChanged', handleStorageChange);
+    };
   }, [artisanId, selectedStatus]);
   
   return { products, loading, fetchProducts, selectedStatus, setSelectedStatus };
@@ -352,47 +400,49 @@ export default function ProductsPage() {
                         </TableCell>
                       </TableRow>
                   ) : (
-                    products.map((product) => (
-                      <TableRow key={product.id} className="hover:bg-muted/30 transition-colors">
-                        <TableCell className="hidden sm:table-cell pl-6">
-                          <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted">
-                            <Image
-                              alt="Product image"
-                              className="object-cover"
-                              fill
-                              src={product.image}
-                            />
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <p className="font-medium leading-tight">
-                              {product.title || product.name}
-                            </p>
-                            <p className="text-sm text-muted-foreground truncate max-w-[200px]">
-                              {product.description}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={
-                              product.status === 'active' ? 'default' : 
-                              product.status === 'draft' ? 'secondary' : 
-                              'outline'
-                            }
-                            className={
-                              product.status === 'active' ? 'bg-green-100 text-green-800 border-green-200' :
-                              product.status === 'draft' ? 'bg-orange-100 text-orange-800 border-orange-200' :
-                              'bg-gray-100 text-gray-800 border-gray-200'
-                            }
-                          >
-                            {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell font-semibold">
-                          ₹{product.price?.toLocaleString() || '0'}
-                        </TableCell>
+                    products.map((product) => {
+                      const finalDisplay = getFinalProductDisplay(product);
+                      return (
+                        <TableRow key={product.id} className="hover:bg-muted/30 transition-colors">
+                          <TableCell className="hidden sm:table-cell pl-6">
+                            <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted">
+                              <Image
+                                alt="Product image"
+                                className="object-cover"
+                                fill
+                                src={product.image}
+                              />
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <p className="font-medium leading-tight">
+                                {finalDisplay.title}
+                              </p>
+                              <p className="text-sm text-muted-foreground truncate max-w-[200px]">
+                                {finalDisplay.description}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={
+                                product.status === 'active' ? 'default' : 
+                                product.status === 'draft' ? 'secondary' : 
+                                'outline'
+                              }
+                              className={
+                                product.status === 'active' ? 'bg-green-100 text-green-800 border-green-200' :
+                                product.status === 'draft' ? 'bg-orange-100 text-orange-800 border-orange-200' :
+                                'bg-gray-100 text-gray-800 border-gray-200'
+                              }
+                            >
+                              {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell font-semibold">
+                            ₹{finalDisplay.price?.toLocaleString() || '0'}
+                          </TableCell>
                         <TableCell className="hidden lg:table-cell">
                           <Badge variant="outline" className="text-xs">
                             {product.category}
@@ -465,8 +515,9 @@ export default function ProductsPage() {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
-                      </TableRow>
-                    ))
+                        </TableRow>
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>

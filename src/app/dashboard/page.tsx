@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth, useRequireAuth } from "@/hooks/use-auth";
-import { getArtisanProducts, type FirestoreProduct } from "@/lib/firestore-products";
+import { getArtisanProducts, getFinalProductDisplay, type FirestoreProduct } from "@/lib/firestore-products";
 import { PageLayout } from "@/components/page-layout";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,6 +77,55 @@ export default function DashboardPage() {
     }
   }, [artisanId]);
 
+  // Add effect to refresh data when page becomes visible (user returns from edit page)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && artisanId) {
+        // Page became visible, refresh data
+        loadDashboardData();
+      }
+    };
+
+    const handleFocus = () => {
+      // Window regained focus, refresh data
+      if (artisanId) {
+        loadDashboardData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [artisanId]);
+
+  // Listen for localStorage changes to refresh data when needed
+  useEffect(() => {
+    const handleStorageChange = () => {
+      if (localStorage.getItem('productDataNeedsRefresh') && artisanId) {
+        loadDashboardData();
+        localStorage.removeItem('productDataNeedsRefresh');
+      }
+    };
+
+    // Check on mount
+    handleStorageChange();
+
+    // Listen for storage events from other tabs/windows
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Custom event for same-tab localStorage changes
+    window.addEventListener('localStorageChanged', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('localStorageChanged', handleStorageChange);
+    };
+  }, [artisanId]);
+
   // Check if profile is incomplete and redirect to onboarding
   useEffect(() => {
     if (user && (!user.artisanProfile || user.artisanProfile.name === 'Anonymous Artisan')) {
@@ -98,7 +147,10 @@ export default function DashboardPage() {
       const draftProducts = fetchedProducts.filter(p => p.status === 'draft').length;
       const archivedProducts = fetchedProducts.filter(p => p.status === 'archived').length;
       
-      const totalValue = fetchedProducts.reduce((sum, p) => sum + (p.price || 0), 0);
+      const totalValue = fetchedProducts.reduce((sum, p) => {
+        const finalDisplay = getFinalProductDisplay(p);
+        return sum + (finalDisplay.price || 0);
+      }, 0);
       const avgPrice = totalProducts > 0 ? totalValue / totalProducts : 0;
 
       // Generate recent activity

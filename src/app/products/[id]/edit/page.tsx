@@ -123,13 +123,20 @@ export default function EditProductPage({ params }: PageProps) {
     try {
       await updateArtisanEdits(product.id, artisanId, artisanEdits);
       
+      // Signal that data needs to be refreshed in other pages
+      localStorage.setItem('productDataNeedsRefresh', Date.now().toString());
+      // Trigger custom event for same-tab localStorage changes
+      window.dispatchEvent(new Event('localStorageChanged'));
+      
       toast({
         title: "Changes Saved",
-        description: "Your product edits have been saved successfully.",
+        description: "Your product edits have been saved successfully. Returning to products page.",
       });
       
-      // Reload product to show updated data
-      await loadProduct();
+      // Redirect to products page instead of reloading
+      setTimeout(() => {
+        router.push("/products");
+      }, 1000);
     } catch (error) {
       console.error("Error saving changes:", error);
       toast({
@@ -137,7 +144,6 @@ export default function EditProductPage({ params }: PageProps) {
         title: "Error",
         description: "Failed to save your changes. Please try again.",
       });
-    } finally {
       setSaving(false);
     }
   };
