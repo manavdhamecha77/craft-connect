@@ -50,7 +50,8 @@ export function AuthForm() {
       description: `Welcome! Redirecting you to the ${roleLabel}.`,
     });
     
-    router.push(redirectPath);
+    // Use replace instead of push to prevent back button issues
+    router.replace(redirectPath);
   };
   
   const onAuthFailure = (error: string) => {

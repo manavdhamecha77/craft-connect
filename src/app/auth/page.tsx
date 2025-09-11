@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { AuthForm } from "./_components/auth-form";
+import { PublicRoute } from "@/components/route-guard";
 
 function AuthPageContent() {
   return (
@@ -43,8 +44,10 @@ function AuthPageContent() {
 
 export default function AuthenticationPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <AuthPageContent />
-    </Suspense>
+    <PublicRoute>
+      <Suspense fallback={<div>Loading...</div>}>
+        <AuthPageContent />
+      </Suspense>
+    </PublicRoute>
   );
 }

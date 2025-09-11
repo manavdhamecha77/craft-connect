@@ -63,6 +63,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } as ArtisanUser);
       } else {
         setUser(null);
+        // If user is not authenticated and trying to access protected routes
+        const protectedRoutes = ['/dashboard', '/products', '/orders', '/profile', '/onboarding'];
+        const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+        
+        if (isProtectedRoute && pathname !== '/auth') {
+          router.replace('/auth');
+        }
       }
       setLoading(false);
     });
@@ -70,9 +77,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, [pathname, router]);
 
+  // Handle browser history navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      // If user is not authenticated and trying to go back to protected routes
+      if (!user && !loading) {
+        const protectedRoutes = ['/dashboard', '/products', '/orders', '/profile', '/onboarding'];
+        const isProtectedRoute = protectedRoutes.some(route => window.location.pathname.startsWith(route));
+        
+        if (isProtectedRoute) {
+          window.history.replaceState(null, '', '/auth');
+          router.replace('/auth');
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [user, loading, router]);
+
   const signOut = async () => {
     await firebaseSignOut(auth);
-    router.push("/auth");
+    // Clear localStorage data on logout
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('productDataNeedsRefresh');
+    
+    // Use replace instead of push to prevent back button issues
+    router.replace("/auth");
   };
 
   const signInAsGuest = async () => {
