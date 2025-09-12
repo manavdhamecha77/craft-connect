@@ -22,6 +22,7 @@ import {
   type FirestoreProduct 
 } from "@/lib/firestore-products";
 import { ArtisanProfile } from "@/components/artisan-profile";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -30,6 +31,7 @@ export default function ProductDetailPage() {
   const { addToCart, isInCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { getProductReviews, getProductAverageRating, canReviewProduct, addReview } = useOrders();
+  const { user } = useAuth();
   const [product, setProduct] = useState<FirestoreProduct | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -276,9 +278,11 @@ export default function ProductDetailPage() {
               <Share2 className="h-4 w-4 mr-2" />
               Share
             </Button>
-            <Button variant="outline" size="sm" onClick={handleWishlistToggle}>
-              <Heart className={`w-4 h-4 ${isInWishlist(product?.id || '') ? 'fill-red-500 text-red-500' : ''}`} />
-            </Button>
+            {user?.role === 'customer' && (
+              <Button variant="outline" size="sm" onClick={handleWishlistToggle}>
+                <Heart className={`w-4 h-4 ${isInWishlist(product?.id || '') ? 'fill-red-500 text-red-500' : ''}`} />
+              </Button>
+            )}
           </div>
         </div>
         
@@ -302,14 +306,16 @@ export default function ProductDetailPage() {
               priority 
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <Button 
-              size="sm" 
-              variant="secondary" 
-              className="absolute top-4 right-4 h-10 w-10 p-0 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm bg-white/80 hover:bg-white"
-              onClick={handleWishlistToggle}
-            >
-              <Heart className={`h-5 w-5 ${isInWishlist(product?.id || '') ? 'fill-red-500 text-red-500' : ''}`} />
-            </Button>
+            {user?.role === 'customer' && (
+              <Button 
+                size="sm" 
+                variant="secondary" 
+                className="absolute top-4 right-4 h-10 w-10 p-0 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm bg-white/80 hover:bg-white"
+                onClick={handleWishlistToggle}
+              >
+                <Heart className={`h-5 w-5 ${isInWishlist(product?.id || '') ? 'fill-red-500 text-red-500' : ''}`} />
+              </Button>
+            )}
           </div>
           
           {/* Trust badges */}
@@ -474,53 +480,57 @@ export default function ProductDetailPage() {
 
           {/* Action Buttons */}
           <div className="space-y-4">
-            {/* Quantity Selector */}
-            <div className="flex items-center space-x-3">
-              <span className="text-sm font-medium">Quantity:</span>
-              <div className="flex items-center border rounded-md">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-10 px-3"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={quantity <= 1}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <span className="min-w-[3rem] text-center text-sm font-medium">{quantity}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-10 px-3"
-                  onClick={() => setQuantity(Math.min(10, quantity + 1))}
-                  disabled={quantity >= 10}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="flex-1" 
-                onClick={handleAddToCart}
-                disabled={!product}
-              >
-                <ShoppingCart className="h-5 w-5 mr-2" />
-                {isInCart(product?.id || '') ? 'Update Cart' : 'Add to Cart'}
-              </Button>
-              <Button 
-                size="lg" 
-                className="flex-1" 
-                onClick={handleBuyNow}
-                disabled={!product}
-              >
-                Buy Now
-              </Button>
-            </div>
+            {user?.role === 'customer' && (
+              <>
+                {/* Quantity Selector */}
+                <div className="flex items-center space-x-3">
+                  <span className="text-sm font-medium">Quantity:</span>
+                  <div className="flex items-center border rounded-md">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-10 px-3"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      disabled={quantity <= 1}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="min-w-[3rem] text-center text-sm font-medium">{quantity}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-10 px-3"
+                      onClick={() => setQuantity(Math.min(10, quantity + 1))}
+                      disabled={quantity >= 10}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <Button 
+                    size="lg" 
+                    variant="outline" 
+                    className="flex-1" 
+                    onClick={handleAddToCart}
+                    disabled={!product}
+                  >
+                    <ShoppingCart className="h-5 w-5 mr-2" />
+                    {isInCart(product?.id || '') ? 'Update Cart' : 'Add to Cart'}
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    className="flex-1" 
+                    onClick={handleBuyNow}
+                    disabled={!product}
+                  >
+                    Buy Now
+                  </Button>
+                </div>
+              </>
+            )}
             
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -606,8 +616,8 @@ export default function ProductDetailPage() {
                       
                       return (
                         <>
-                          {/* Review Form - Allow all users to review for testing */}
-                          {!hasAlreadyReviewed && (
+                          {/* Review Form - Only allow customers to review */}
+                          {user?.role === 'customer' && !hasAlreadyReviewed && (
                             <div className="bg-muted/30 p-6 rounded-lg">
                               <div className="flex items-center justify-between mb-4">
                                 <h4 className="font-medium">Write a Review</h4>
