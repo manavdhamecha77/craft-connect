@@ -34,9 +34,43 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   signInAsGuest: () => Promise<void>;
   updateArtisanProfile: (profile: ArtisanUser['artisanProfile']) => void;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Helper function to retry getUserProfile with delays
+async function getUserProfileWithRetry(
+  uid: string,
+  maxRetries: number = 3,
+  delayMs: number = 1000
+): Promise<any> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const profile = await getUserProfile(uid);
+      if (profile) {
+        return profile;
+      }
+      
+      // If no profile found and not the last attempt, wait before retrying
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, delayMs * attempt));
+      }
+    } catch (error) {
+      console.error(`Profile fetch attempt ${attempt} failed:`, error);
+      
+      // If not the last attempt, wait before retrying
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, delayMs * attempt));
+      } else {
+        // Last attempt failed, throw the error
+        throw error;
+      }
+    }
+  }
+  
+  return null; // No profile found after all retries
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<ArtisanUser | null>(null);
@@ -48,8 +82,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          // Load user profile from Firestore
-          let userProfile = await getUserProfile(firebaseUser.uid);
+          // Load user profile from Firestore with retry logic
+          let userProfile = await getUserProfileWithRetry(firebaseUser.uid, 3, 1000);
           
           // If no profile exists, set user with a special flag to trigger migration
           if (!userProfile) {
@@ -201,7 +235,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const value = { user, loading, signOut, signInAsGuest, updateArtisanProfile };
+  const refreshUserProfile = async () => {
+    if (!auth.currentUser) return;
+    
+    try {
+      setLoading(true);
+      const firebaseUser = auth.currentUser;
+      
+      // Load user profile from Firestore with retry logic
+      const userProfile = await getUserProfileWithRetry(firebaseUser.uid, 3, 500);
+      
+      if (userProfile) {
+        setUser({
+          ...firebaseUser,
+          role: userProfile.role,
+          artisanProfile: userProfile.artisanProfile || {
+            name: firebaseUser.displayName || 'Anonymous User',
+            region: 'Unknown Region'
+          }
+        } as ArtisanUser);
+      } else {
+        // No profile found - set needsProfileMigration flag
+        setUser({
+          ...firebaseUser,
+          role: 'customer', // Default role
+          artisanProfile: {
+            name: firebaseUser.displayName || 'Anonymous User',
+            region: 'Unknown Region'
+          },
+          needsProfileMigration: true
+        } as ArtisanUser & { needsProfileMigration: boolean });
+      }
+    } catch (error) {
+      console.error('Error refreshing user profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const value = { user, loading, signOut, signInAsGuest, updateArtisanProfile, refreshUserProfile };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
