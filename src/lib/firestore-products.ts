@@ -282,12 +282,19 @@ export async function updateArtisanEdits(
     }
 
     const docRef = doc(db, PRODUCTS_COLLECTION, productId);
-    const updateData = cleanFirestoreData({
+    
+    // Prepare update data with merged artisan edits
+    const updateData: any = {
       artisanEdits: { ...product.artisanEdits, ...edits },
       updatedAt: Timestamp.now()
-    });
+    };
     
-    await updateDoc(docRef, updateData);
+    // If customPrice is being updated, also update the main price field
+    if (edits?.customPrice !== undefined) {
+      updateData.price = edits.customPrice;
+    }
+    
+    await updateDoc(docRef, cleanFirestoreData(updateData));
   } catch (error) {
     console.error('Error updating artisan edits:', error);
     throw new Error('Failed to update product edits');
