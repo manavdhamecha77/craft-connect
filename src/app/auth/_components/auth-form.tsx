@@ -12,6 +12,24 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, ShoppingBag, Users } from "lucide-react";
+import { useAuth, ArtisanUser } from '@/hooks/use-auth';
+
+// Helper function to check if an artisan user needs onboarding
+function needsOnboarding(user: any): boolean {
+  if (!user || user.role !== 'artisan') return false;
+  
+  // Check if artisan profile is incomplete
+  const profile = user.artisanProfile;
+  if (!profile) return true;
+  
+  // Required fields for a complete profile
+  return (
+    !profile.specialization || 
+    !profile.bio ||
+    profile.bio.trim().length === 0 ||
+    profile.region === 'Unknown Region'
+  );
+}
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
@@ -25,6 +43,7 @@ export function AuthForm() {
   const [isLogin, setIsLogin] = React.useState(true);
   const [isLoading, setIsLoading] = React.useState(false);
   const { toast } = useToast();
+  const { refreshUserProfile } = useAuth(); // Add refreshUserProfile
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -38,23 +57,25 @@ export function AuthForm() {
 
   const toggleForm = () => setIsLogin(!isLogin);
 
-  const onAuthSuccess = () => {
+  const onAuthSuccess = async () => {
     // Store user role in localStorage for future reference
     localStorage.setItem('userRole', userRole);
     
-    // For new signups (not login), redirect artisans to onboarding
-    const redirectPath = (!isLogin && isArtisan) ? '/onboarding' : 
-                         (isArtisan ? '/dashboard' : '/marketplace');
-    const roleLabel = (!isLogin && isArtisan) ? 'Artisan Onboarding' : 
-                     (isArtisan ? 'Artisan Dashboard' : 'Marketplace');
-    
     toast({
       title: "Authentication Successful",
-      description: `Welcome! Redirecting you to the ${roleLabel}.`,
+      description: `Welcome! Loading your profile...`,
     });
     
-    // Use replace instead of push to prevent back button issues
-    router.replace(redirectPath);
+    // For sign-up, always redirect artisans to onboarding
+    // For sign-in, let the route guard handle the decision based on profile completeness
+    if (!isLogin && isArtisan) {
+      // New artisan signup - always go to onboarding
+      router.replace('/onboarding');
+    } else {
+      // For sign-in or customer signup, let the route guard redirect appropriately
+      // This gives time for the auth context to load user data and make the right decision
+      router.replace(isArtisan ? '/dashboard' : '/marketplace');
+    }
   };
   
   const onAuthFailure = (error: string) => {
@@ -106,11 +127,17 @@ export function AuthForm() {
   const handleGoogleAuth = async () => {
     setIsLoading(true);
     
+    // Store original isLogin state
+    const originalIsLogin = isLogin;
+    
     const result = await signInWithGoogle(userRole as 'artisan' | 'customer');
     
     if (result.error) {
       onAuthFailure(result.error);
     } else {
+      // For Google auth, we need to check if this was a new user creation
+      // The auth-utils will create a new profile if one doesn't exist
+      // For simplicity, let the route guard handle the routing decision
       onAuthSuccess();
     }
     

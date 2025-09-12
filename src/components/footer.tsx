@@ -156,10 +156,8 @@ export function Footer() {
         {/* Footer Bottom */}
         <div className="border-t border-gray-800 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center">
           <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6 mb-4 md:mb-0">
-            <div className="flex items-center space-x-4 text-xs text-gray-400">
-              <span className="text-[#FF9933] font-semibold">10K+</span> Artisans
-              <span className="text-[#FF9933] font-semibold">50K+</span> Products
-              <span className="text-[#FF9933] font-semibold">28</span> States
+            <div className="text-xs text-gray-400 max-w-md">
+              <span className="font-['PT_Sans',sans-serif]">A vibrant community of artisans offering a diverse collection of unique products across 28 states.</span>
             </div>
             <p className="text-xs text-gray-400 font-['PT_Sans',sans-serif]">
               &copy; {new Date().getFullYear()} CraftConnect AI. All rights reserved.

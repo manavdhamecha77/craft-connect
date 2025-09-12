@@ -2,8 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth, ArtisanUser } from '@/hooks/use-auth';
 import { PageLayout } from './page-layout';
+
+// Helper function to check if an artisan user needs onboarding
+function needsOnboarding(user: ArtisanUser): boolean {
+  if (user.role !== 'artisan') return false;
+  
+  // Check if artisan profile is incomplete
+  const profile = user.artisanProfile;
+  if (!profile) return true;
+  
+  // Required fields for a complete profile
+  return (
+    !profile.specialization || 
+    !profile.bio ||
+    profile.bio.trim().length === 0 ||
+    profile.region === 'Unknown Region'
+  );
+}
 
 interface RouteGuardProps {
   children: React.ReactNode;
@@ -50,8 +67,14 @@ export function RouteGuard({
       // If auth is not required and user is authenticated, redirect away from auth pages
       if (!requireAuth && user && pathname.startsWith('/auth')) {
         setAuthorized(false);
-        const redirectPath = user.role === 'artisan' ? '/dashboard' : '/marketplace';
-        router.replace(redirectPath);
+        
+        // For artisans, check if they need onboarding first
+        if (user.role === 'artisan' && needsOnboarding(user)) {
+          router.replace('/onboarding');
+        } else {
+          const redirectPath = user.role === 'artisan' ? '/dashboard' : '/marketplace';
+          router.replace(redirectPath);
+        }
         return;
       }
 

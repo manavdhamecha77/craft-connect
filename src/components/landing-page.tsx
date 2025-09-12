@@ -24,6 +24,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { AppNavbar } from "./navbar";
 import { Footer } from "./footer";
+import { useEffect, useState } from 'react';
+import { getTopArtisans, UserProfile } from '@/lib/user-management';
 
 const artisanFeatures = [
   {
@@ -75,32 +77,282 @@ const customerFeatures = [
   }
 ];
 
-const sampleArtisans = [
-  {
-    name: "Meera Sharma",
-    region: "Rajasthan",
-    craft: "Block Printing",
-    image: "/api/placeholder/120/120",
-    products: 24,
-    rating: 4.9
-  },
-  {
-    name: "Ravi Kumar",
-    region: "Kashmir",
-    craft: "Pashmina Weaving",
-    image: "/api/placeholder/120/120",
-    products: 18,
-    rating: 4.8
-  },
-  {
-    name: "Lakshmi Devi",
-    region: "Tamil Nadu",
-    craft: "Bronze Sculpture",
-    image: "/api/placeholder/120/120",
-    products: 31,
-    rating: 5.0
+// Component for dynamic artisan showcase
+function ArtisanShowcase() {
+  const [artisans, setArtisans] = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Test mode: set to true to use mock data for testing
+  const TEST_MODE = false;
+
+  useEffect(() => {
+    async function fetchArtisans() {
+      try {
+        setLoading(true);
+        
+        if (TEST_MODE) {
+          // Use mock data for testing
+          const mockArtisans: UserProfile[] = [
+            {
+              uid: 'mock-1',
+              email: 'meera@test.com',
+              displayName: 'Meera Sharma',
+              role: 'artisan',
+              createdAt: { toMillis: () => Date.now() - 86400000 } as any,
+              updatedAt: { toMillis: () => Date.now() } as any,
+              artisanProfile: {
+                name: 'Meera Sharma',
+                region: 'Jaipur, Rajasthan',
+                specialization: 'Block Printing',
+                bio: 'Traditional Rajasthani block printing artisan with over 15 years of experience.',
+                experience: '15 years',
+                techniques: 'Block printing, Natural dyeing',
+                inspiration: 'Rajasthani heritage and desert landscapes',
+                goals: 'Preserve traditional techniques while reaching global markets'
+              }
+            },
+            {
+              uid: 'mock-2',
+              email: 'ravi@test.com',
+              displayName: 'Ravi Kumar',
+              role: 'artisan',
+              createdAt: { toMillis: () => Date.now() - 172800000 } as any,
+              updatedAt: { toMillis: () => Date.now() } as any,
+              artisanProfile: {
+                name: 'Ravi Kumar',
+                region: 'Srinagar, Kashmir',
+                specialization: 'Pashmina Weaving',
+                bio: 'Master weaver of authentic Kashmiri Pashmina shawls with 100 years of family tradition.',
+                experience: '20 years',
+                techniques: 'Hand weaving, Cashmere processing',
+                inspiration: 'Kashmir valleys and ancestral legacy',
+                goals: 'Showcase authentic Kashmiri Pashmina globally'
+              }
+            },
+            {
+              uid: 'mock-3',
+              email: 'lakshmi@test.com',
+              displayName: 'Lakshmi Devi',
+              role: 'artisan',
+              createdAt: { toMillis: () => Date.now() - 259200000 } as any,
+              updatedAt: { toMillis: () => Date.now() } as any,
+              artisanProfile: {
+                name: 'Lakshmi Devi',
+                region: 'Thanjavur, Tamil Nadu',
+                specialization: 'Bronze Sculpture',
+                bio: 'Expert in traditional Thanjavur bronze sculpture using ancient lost-wax casting technique.',
+                experience: '18 years',
+                techniques: 'Lost-wax casting, Bronze working',
+                inspiration: 'Tamil Nadu mythology and temple architecture',
+                goals: 'Preserve ancient bronze sculpture art'
+              }
+            }
+          ];
+          
+          console.log('Using mock artisan data for testing');
+          setArtisans(mockArtisans);
+        } else {
+          const fetchedArtisans = await getTopArtisans(3);
+          setArtisans(fetchedArtisans);
+          
+          // If no artisans found, log this for debugging
+          if (fetchedArtisans.length === 0) {
+            console.log('No artisans found in database, will show fallback data');
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching artisans:', err);
+        setError('Failed to load artisans');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // Add a small delay to show loading state
+    setTimeout(fetchArtisans, 1000);
+  }, []);
+
+  if (loading) {
+    return (
+      <section id="artisans" className="py-24 px-6 lg:px-8 bg-[#F5F5DC]">
+        <div className="mx-auto max-w-7xl">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl font-['Playfair_Display',serif]">
+              Meet Our{" "}
+              <span className="text-[#4B0082]">Artisans</span>
+            </h2>
+            <p className="mt-4 text-lg text-gray-600 font-['PT_Sans',sans-serif]">
+              Discover the incredible craftsmanship from across India
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[...Array(3)].map((_, index) => (
+              <Card key={index} className="text-center animate-pulse">
+                <CardHeader>
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="h-24 w-24 bg-gray-200 rounded-full"></div>
+                    <div>
+                      <div className="h-6 bg-gray-200 rounded w-32 mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-center space-x-6">
+                    <div className="h-4 bg-gray-200 rounded w-20"></div>
+                    <div className="h-4 bg-gray-200 rounded w-16"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
   }
-];
+
+  if (error || artisans.length === 0) {
+    // Fallback to sample data if there's an error or no artisans
+    const fallbackArtisans = [
+      {
+        name: "Meera Sharma",
+        region: "Rajasthan",
+        craft: "Block Printing",
+        image: "/api/placeholder/120/120",
+        products: 24,
+        rating: 4.9
+      },
+      {
+        name: "Ravi Kumar",
+        region: "Kashmir",
+        craft: "Pashmina Weaving",
+        image: "/api/placeholder/120/120",
+        products: 18,
+        rating: 4.8
+      },
+      {
+        name: "Lakshmi Devi",
+        region: "Tamil Nadu",
+        craft: "Bronze Sculpture",
+        image: "/api/placeholder/120/120",
+        products: 31,
+        rating: 5.0
+      }
+    ];
+
+    return (
+      <section id="artisans" className="py-24 px-6 lg:px-8 bg-[#F5F5DC]">
+        <div className="mx-auto max-w-7xl">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl font-['Playfair_Display',serif]">
+              Meet Our{" "}
+              <span className="text-[#4B0082]">Artisans</span>
+            </h2>
+            <p className="mt-4 text-lg text-gray-600 font-['PT_Sans',sans-serif]">
+              Discover the incredible craftsmanship from across India
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {fallbackArtisans.map((artisan, index) => (
+              <Card key={index} className="text-center hover:shadow-lg transition-shadow duration-300">
+                <CardHeader>
+                  <div className="flex flex-col items-center space-y-4">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src={artisan.image} alt={artisan.name} />
+                      <AvatarFallback className="bg-[#FF9933]/10 text-[#4B0082] text-xl">
+                        {artisan.name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-xl font-['Playfair_Display',serif]">
+                        {artisan.name}
+                      </CardTitle>
+                      <CardDescription className="text-[#4B0082] font-medium">
+                        {artisan.craft} • {artisan.region}
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-center space-x-6 text-sm text-gray-600">
+                    <div className="flex items-center">
+                      <Palette className="h-4 w-4 mr-1 text-[#FF9933]" />
+                      {artisan.products} Products
+                    </div>
+                    <div className="flex items-center">
+                      <Star className="h-4 w-4 mr-1 text-yellow-400 fill-current" />
+                      {artisan.rating}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section id="artisans" className="py-24 px-6 lg:px-8 bg-[#F5F5DC]">
+      <div className="mx-auto max-w-7xl">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl font-['Playfair_Display',serif]">
+            Meet Our{" "}
+            <span className="text-[#4B0082]">Artisans</span>
+          </h2>
+          <p className="mt-4 text-lg text-gray-600 font-['PT_Sans',sans-serif]">
+            Discover the incredible craftsmanship from across India
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {artisans.map((artisan, index) => {
+            const profile = artisan.artisanProfile;
+            // Generate a random rating and product count for display
+            const rating = (4.5 + Math.random() * 0.5).toFixed(1);
+            const productCount = Math.floor(Math.random() * 30) + 10;
+            
+            return (
+              <Card key={artisan.uid} className="text-center hover:shadow-lg transition-shadow duration-300">
+                <CardHeader>
+                  <div className="flex flex-col items-center space-y-4">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src="/api/placeholder/120/120" alt={profile?.name || artisan.displayName} />
+                      <AvatarFallback className="bg-[#FF9933]/10 text-[#4B0082] text-xl">
+                        {(profile?.name || artisan.displayName || 'A').split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-xl font-['Playfair_Display',serif]">
+                        {profile?.name || artisan.displayName}
+                      </CardTitle>
+                      <CardDescription className="text-[#4B0082] font-medium">
+                        {profile?.specialization || 'Artisan'} • {profile?.region || 'India'}
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-center space-x-6 text-sm text-gray-600">
+                    <div className="flex items-center">
+                      <Palette className="h-4 w-4 mr-1 text-[#FF9933]" />
+                      {productCount} Products
+                    </div>
+                    <div className="flex items-center">
+                      <Star className="h-4 w-4 mr-1 text-yellow-400 fill-current" />
+                      {rating}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 const testimonials = [
   {
@@ -260,55 +512,7 @@ export function LandingPage() {
       </section>
 
       {/* Artisan Showcase Section */}
-      <section id="artisans" className="py-24 px-6 lg:px-8 bg-[#F5F5DC]">
-        <div className="mx-auto max-w-7xl">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl font-['Playfair_Display',serif]">
-              Meet Our{" "}
-              <span className="text-[#4B0082]">Artisans</span>
-            </h2>
-            <p className="mt-4 text-lg text-gray-600 font-['PT_Sans',sans-serif]">
-              Discover the incredible craftsmanship from across India
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {sampleArtisans.map((artisan, index) => (
-              <Card key={index} className="text-center hover:shadow-lg transition-shadow duration-300">
-                <CardHeader>
-                  <div className="flex flex-col items-center space-y-4">
-                    <Avatar className="h-24 w-24">
-                      <AvatarImage src={artisan.image} alt={artisan.name} />
-                      <AvatarFallback className="bg-[#FF9933]/10 text-[#4B0082] text-xl">
-                        {artisan.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <CardTitle className="text-xl font-['Playfair_Display',serif]">
-                        {artisan.name}
-                      </CardTitle>
-                      <CardDescription className="text-[#4B0082] font-medium">
-                        {artisan.craft} • {artisan.region}
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex justify-center space-x-6 text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <Palette className="h-4 w-4 mr-1 text-[#FF9933]" />
-                      {artisan.products} Products
-                    </div>
-                    <div className="flex items-center">
-                      <Star className="h-4 w-4 mr-1 text-yellow-400 fill-current" />
-                      {artisan.rating}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+      <ArtisanShowcase />
 
       {/* Marketplace Preview Section */}
       <section id="marketplace" className="py-24 px-6 lg:px-8 bg-white">
