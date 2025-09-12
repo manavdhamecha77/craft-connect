@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "@/hooks/use-auth";
 import { CartProvider } from "@/contexts/cart-context";
+import { WishlistProvider } from "@/contexts/wishlist-context";
 import { OrdersProvider } from "@/contexts/orders-context";
 import { Toaster } from "@/components/ui/toaster";
 import { ArtisanChatbot } from "@/components/artisan-chatbot";
@@ -27,10 +28,12 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <AuthProvider>
           <CartProvider>
-            <OrdersProvider>
-              {children}
-              <ArtisanChatbot />
-            </OrdersProvider>
+            <WishlistProvider>
+              <OrdersProvider>
+                {children}
+                <ArtisanChatbot />
+              </OrdersProvider>
+            </WishlistProvider>
           </CartProvider>
         </AuthProvider>
         <Toaster />

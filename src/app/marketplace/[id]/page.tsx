@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Heart, MapPin, User, Share2, ShoppingCart, Star, Shield, Truck, RotateCcw, MessageCircle, Plus, Minus, StarIcon } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
+import { useWishlist } from "@/contexts/wishlist-context";
 import { useOrders } from "@/contexts/orders-context";
 import { PageLayout } from "@/components/page-layout";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { addToCart, isInCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const { getProductReviews, getProductAverageRating, canReviewProduct, addReview } = useOrders();
   const [product, setProduct] = useState<FirestoreProduct | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,29 +69,31 @@ export default function ProductDetailPage() {
         setProduct(fetchedProduct);
         
         // Add demo reviews if none exist (for testing purposes)
-        const existingReviews = getProductReviews(fetchedProduct.id);
-        if (existingReviews.length === 0) {
-          // Add some demo reviews
-          const demoReviews = [
-            {
-              productId: fetchedProduct.id,
-              customerId: 'demo-customer-1',
-              customerName: 'Priya Sharma',
-              orderId: 'demo-order-1',
-              rating: 5,
-              comment: 'Beautiful handcrafted piece! The quality is exceptional and you can see the attention to detail. Highly recommend!'
-            },
-            {
-              productId: fetchedProduct.id,
-              customerId: 'demo-customer-2', 
-              customerName: 'Rajesh Kumar',
-              orderId: 'demo-order-2',
-              rating: 4,
-              comment: 'Great product and fast delivery. The artisan did an amazing job. Worth every penny.'
-            }
-          ];
-          
-          demoReviews.forEach(review => addReview(review));
+        if (fetchedProduct.id) {
+          const existingReviews = getProductReviews(fetchedProduct.id);
+          if (existingReviews.length === 0) {
+            // Add some demo reviews
+            const demoReviews = [
+              {
+                productId: fetchedProduct.id,
+                customerId: 'demo-customer-1',
+                customerName: 'Priya Sharma',
+                orderId: 'demo-order-1',
+                rating: 5,
+                comment: 'Beautiful handcrafted piece! The quality is exceptional and you can see the attention to detail. Highly recommend!'
+              },
+              {
+                productId: fetchedProduct.id,
+                customerId: 'demo-customer-2', 
+                customerName: 'Rajesh Kumar',
+                orderId: 'demo-order-2',
+                rating: 4,
+                comment: 'Great product and fast delivery. The artisan did an amazing job. Worth every penny.'
+              }
+            ];
+            
+            demoReviews.forEach(review => addReview(review));
+          }
         }
       }
     } catch (error) {
@@ -118,7 +122,7 @@ export default function ProductDetailPage() {
   };
 
   const handleAddToCart = () => {
-    if (!product) return;
+    if (!product || !product.id) return;
     
     const displayData = getFinalProductDisplay(product);
     const cartItem = {
@@ -142,7 +146,7 @@ export default function ProductDetailPage() {
   };
   
   const handleBuyNow = () => {
-    if (!product) return;
+    if (!product || !product.id) return;
     
     // Add to cart first
     handleAddToCart();
@@ -151,8 +155,26 @@ export default function ProductDetailPage() {
     router.push('/checkout');
   };
   
+  const handleWishlistToggle = () => {
+    if (!product || !product.id) return;
+    
+    const displayData = getFinalProductDisplay(product);
+    const wishlistItem = {
+      id: `wishlist-${product.id}-${Date.now()}`,
+      productId: product.id,
+      name: displayData.title,
+      price: displayData.price || 0,
+      image: product.image,
+      artisan: product.artisanName || "Unknown Artisan",
+      region: product.artisanRegion || "",
+      category: product.category
+    };
+    
+    toggleWishlist(wishlistItem);
+  };
+  
   const handleSubmitReview = async () => {
-    if (!product || reviewForm.rating === 0) {
+    if (!product || !product.id || reviewForm.rating === 0) {
       toast({
         title: "Invalid review",
         description: "Please provide a rating.",
@@ -254,8 +276,8 @@ export default function ProductDetailPage() {
               <Share2 className="h-4 w-4 mr-2" />
               Share
             </Button>
-            <Button variant="outline" size="sm">
-              <Heart className="w-4 h-4" />
+            <Button variant="outline" size="sm" onClick={handleWishlistToggle}>
+              <Heart className={`w-4 h-4 ${isInWishlist(product?.id || '') ? 'fill-red-500 text-red-500' : ''}`} />
             </Button>
           </div>
         </div>
@@ -284,8 +306,9 @@ export default function ProductDetailPage() {
               size="sm" 
               variant="secondary" 
               className="absolute top-4 right-4 h-10 w-10 p-0 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm bg-white/80 hover:bg-white"
+              onClick={handleWishlistToggle}
             >
-              <Heart className="h-5 w-5" />
+              <Heart className={`h-5 w-5 ${isInWishlist(product?.id || '') ? 'fill-red-500 text-red-500' : ''}`} />
             </Button>
           </div>
           
@@ -324,6 +347,7 @@ export default function ProductDetailPage() {
               {/* Rating display */}
               <div className="flex items-center space-x-1">
                 {(() => {
+                  if (!product.id) return null;
                   const averageRating = getProductAverageRating(product.id);
                   const reviews = getProductReviews(product.id);
                   const fullStars = Math.floor(averageRating);
@@ -575,6 +599,7 @@ export default function ProductDetailPage() {
                     </h3>
                     
                     {(() => {
+                      if (!product.id) return null;
                       const reviews = getProductReviews(product.id);
                       const canReview = canReviewProduct('current-customer', product.id);
                       const hasAlreadyReviewed = reviews.some(review => review.customerId === 'current-customer');

@@ -11,22 +11,39 @@ import {
   MapPin
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/hooks/use-auth";
+import { useWishlist } from "@/contexts/wishlist-context";
+import { useCart } from "@/contexts/cart-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function WishlistPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const { items: wishlistItems, removeFromWishlist } = useWishlist();
+  const { addToCart } = useCart();
 
   useEffect(() => {
     if (user?.role === 'artisan') {
       router.push('/dashboard');
     }
   }, [user, router]);
-
-  // For now, show empty wishlist - this would be implemented with a wishlist context
-  const wishlistItems: any[] = [];
+  
+  const handleAddToCart = (item: any) => {
+    const cartItem = {
+      id: `cart-${item.productId}-${Date.now()}`,
+      productId: item.productId,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+      artisan: item.artisan,
+      region: item.region,
+      maxQuantity: 10
+    };
+    
+    addToCart(cartItem);
+  };
 
   if (wishlistItems.length === 0) {
     return (
@@ -63,36 +80,53 @@ export default function WishlistPage() {
         {wishlistItems.map((item) => (
           <Card key={item.id} className="hover:shadow-lg transition-shadow">
             <CardContent className="p-4">
-              <div className="aspect-square bg-gray-200 rounded-md mb-4 relative">
-                <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                  <ShoppingBag className="h-12 w-12" />
-                </div>
+              <div className="aspect-square bg-gray-200 rounded-md mb-4 relative overflow-hidden">
+                <Link href={`/marketplace/${item.productId}`}>
+                  <Image 
+                    src={item.image} 
+                    alt={item.name} 
+                    fill 
+                    className="object-cover hover:scale-105 transition-transform cursor-pointer" 
+                  />
+                </Link>
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="absolute top-2 right-2 h-8 w-8 p-0 text-red-500"
+                  className="absolute top-2 right-2 h-8 w-8 p-0 text-red-500 bg-white/80 hover:bg-white"
+                  onClick={() => removeFromWishlist(item.productId)}
                 >
                   <Heart className="h-4 w-4 fill-current" />
                 </Button>
               </div>
               
-              <h3 className="font-semibold mb-1">{item.name}</h3>
+              <Link href={`/marketplace/${item.productId}`}>
+                <h3 className="font-semibold mb-1 hover:text-primary cursor-pointer line-clamp-2">{item.name}</h3>
+              </Link>
               
               <div className="flex items-center text-sm text-muted-foreground mb-2">
                 <MapPin className="h-3 w-3 mr-1" />
-                by {item.artisan} • {item.region}
+                by {item.artisan} {item.region && ` • ${item.region}`}
               </div>
               
-              <div className="flex items-center mb-3">
-                <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                <span className="text-sm ml-1">{item.rating}</span>
+              <div className="flex items-center mb-2">
+                <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded">
+                  {item.category}
+                </span>
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-lg font-bold text-[#FF9933]">₹{item.price?.toLocaleString()}</span>
-                <Button size="sm" className="bg-[#FF9933] hover:bg-[#FF9933]/90">
+                <span className="text-lg font-bold text-primary">₹{item.price?.toLocaleString()}</span>
+                <Button 
+                  size="sm" 
+                  className="bg-primary hover:bg-primary/90"
+                  onClick={() => handleAddToCart(item)}
+                >
                   Add to Cart
                 </Button>
+              </div>
+              
+              <div className="text-xs text-muted-foreground mt-2">
+                Added {item.addedDate.toLocaleDateString()}
               </div>
             </CardContent>
           </Card>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Filter, Heart, MapPin, Star, Plus, Grid3X3, List, ShoppingBag } from "lucide-react";
+import { Search, Filter, MapPin, Star, Plus, Grid3X3, List, ShoppingBag } from "lucide-react";
 import { PageLayout } from "@/components/page-layout";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -68,7 +68,7 @@ export default function MarketplacePage() {
         const displayData = getFinalProductDisplay(product);
         return (
           displayData.title.toLowerCase().includes(searchTerm) ||
-          displayData.description.toLowerCase().includes(searchTerm) ||
+          (displayData.description?.toLowerCase().includes(searchTerm) || false) ||
           product.category.toLowerCase().includes(searchTerm) ||
           (product.artisanName && product.artisanName.toLowerCase().includes(searchTerm))
         );
@@ -302,13 +302,6 @@ export default function MarketplacePage() {
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <Button 
-                      size="sm" 
-                      variant="secondary" 
-                      className="absolute top-3 right-3 h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Heart className="h-4 w-4" />
-                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent className="p-4 flex-grow flex flex-col">

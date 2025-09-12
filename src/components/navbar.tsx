@@ -21,6 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/contexts/cart-context";
+import { useWishlist } from "@/contexts/wishlist-context";
 import { useState } from "react";
 import {
   Avatar,
@@ -103,11 +104,13 @@ export function AppNavbar() {
   const pathname = usePathname();
   const { user, loading, signOut } = useAuth();
   const { getTotalItems } = useCart();
+  const { getTotalItems: getWishlistTotalItems } = useWishlist();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const menuItems = getMenuItems(user?.role);
   const isLandingPage = pathname === '/';
   const cartItemsCount = getTotalItems();
+  const wishlistItemsCount = getWishlistTotalItems();
 
   const getInitials = (name: string | null | undefined) => {
     if (!name || name === 'Anonymous Artisan') return user?.role === 'artisan' ? "A" : "C";
@@ -212,16 +215,28 @@ export function AppNavbar() {
               // Authenticated user section
               <>
                 {user?.role === 'customer' && (
-                  <Link href="/cart" className="relative">
-                    <Button variant="ghost" size="icon">
-                      <ShoppingCart className="h-5 w-5" />
-                      {cartItemsCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-[#FF9933] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                          {cartItemsCount > 9 ? '9+' : cartItemsCount}
-                        </span>
-                      )}
-                    </Button>
-                  </Link>
+                  <>
+                    <Link href="/wishlist" className="relative">
+                      <Button variant="ghost" size="icon">
+                        <Heart className="h-5 w-5" />
+                        {wishlistItemsCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                            {wishlistItemsCount > 9 ? '9+' : wishlistItemsCount}
+                          </span>
+                        )}
+                      </Button>
+                    </Link>
+                    <Link href="/cart" className="relative">
+                      <Button variant="ghost" size="icon">
+                        <ShoppingCart className="h-5 w-5" />
+                        {cartItemsCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-[#FF9933] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                            {cartItemsCount > 9 ? '9+' : cartItemsCount}
+                          </span>
+                        )}
+                      </Button>
+                    </Link>
+                  </>
                 )}
                 
                 <DropdownMenu>
