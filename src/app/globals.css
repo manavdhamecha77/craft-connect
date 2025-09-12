@@ -106,3 +106,72 @@ body {
 .animate-tilt {
   animation: tilt 10s infinite linear;
 }
+
+/* Enhanced Loading Animations */
+@keyframes craftSpin {
+  0% {
+    transform: rotate(0deg);
+    border-color: #FF9933 transparent #FF9933 transparent;
+  }
+  25% {
+    border-color: #4B0082 #FF9933 transparent transparent;
+  }
+  50% {
+    transform: rotate(180deg);
+    border-color: transparent #4B0082 #4B0082 transparent;
+  }
+  75% {
+    border-color: transparent transparent #FF9933 #4B0082;
+  }
+  100% {
+    transform: rotate(360deg);
+    border-color: #FF9933 transparent #FF9933 transparent;
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-craft-spin {
+  animation: craftSpin 2s linear infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s ease-in-out infinite;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}

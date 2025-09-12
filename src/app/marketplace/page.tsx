@@ -19,6 +19,7 @@ import { getMarketplaceProducts, searchProducts, getFinalProductDisplay, type Fi
 import { useCart } from "@/contexts/cart-context";
 import { useOrders } from "@/contexts/orders-context";
 import { useAuth } from "@/hooks/use-auth";
+import { PageLoading, LoadingGrid } from "@/components/ui/loading";
 
 export default function MarketplacePage() {
   const [products, setProducts] = useState<FirestoreProduct[]>([]);
@@ -232,10 +233,10 @@ export default function MarketplacePage() {
 
       {/* Products Display */}
       {loading ? (
-        <div className="text-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading handcrafted treasures...</p>
-        </div>
+        <PageLoading 
+          text="Discovering Handcrafted Treasures" 
+          subtext="Fetching unique artisanal products from skilled craftspeople across India..."
+        />
       ) : filteredProducts.length === 0 ? (
         <div className="text-center py-20">
           <div className="max-w-md mx-auto">

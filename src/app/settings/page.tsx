@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -36,8 +36,17 @@ import { HelpSettings } from "./_components/help-settings";
 
 export default function SettingsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
+  
+  // Handle URL parameters for tab switching
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['profile', 'business', 'notifications', 'privacy', 'help'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   const settingsSections = [
     {

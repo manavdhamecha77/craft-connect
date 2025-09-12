@@ -132,8 +132,8 @@ export function AppNavbar() {
   return (
     <>
       <nav className={cn(
-        "sticky top-0 z-50 w-full border-b border-border/40 backdrop-blur supports-[backdrop-filter]:bg-background/80",
-        isLandingPage && !user ? "bg-white/95" : "bg-background/95"
+        "sticky top-0 z-50 w-full border-b border-border/40 backdrop-blur supports-[backdrop-filter]:bg-white/90 shadow-sm",
+        isLandingPage && !user ? "bg-white/95 shadow-md" : "bg-white/95 shadow-md"
       )}>
         <div className={cn(
           "relative flex h-16 items-center justify-between",
@@ -322,8 +322,8 @@ export function AppNavbar() {
 
       {/* Mobile Navigation Menu */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 top-16 z-50 grid h-[calc(100vh-4rem)] w-full grid-flow-row auto-rows-max overflow-auto p-6 pb-16 shadow-md animate-in slide-in-from-bottom-80 md:hidden">
-          <div className="relative z-20 grid gap-6 rounded-md bg-popover p-4 text-popover-foreground shadow-md">
+        <div className="fixed inset-0 top-16 z-50 grid h-[calc(100vh-4rem)] w-full grid-flow-row auto-rows-max overflow-auto p-6 pb-16 bg-black/20 backdrop-blur-sm animate-in slide-in-from-bottom-80 md:hidden">
+          <div className="relative z-20 grid gap-6 rounded-md bg-white p-4 shadow-lg border border-border/10">
             {!user && isLandingPage ? (
               // Landing page mobile menu
               <nav className="grid grid-flow-row auto-rows-max text-sm">

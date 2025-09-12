@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Facebook, Instagram, Mail, MapPin, Phone, Sparkles, Heart } from "lucide-react";
+import { Facebook, Instagram, Mail, MapPin, Phone, Sparkles, Heart, LayoutDashboard } from "lucide-react";
 import { Logo } from "./logo";
 
 // Custom X (formerly Twitter) icon component
@@ -29,9 +29,17 @@ export function Footer() {
             <p className="text-gray-300 text-sm font-['PT_Sans',sans-serif] mb-3">
               AI-powered platform connecting artisans with global customers.
             </p>
-            <div className="flex items-center space-x-2 text-xs text-gray-400">
-              <Heart className="h-3 w-3 text-[#FF9933]" />
-              <span className="font-['PT_Sans',sans-serif]">Supporting 10K+ artisans</span>
+            
+            {/* Contact Info */}
+            <div className="space-y-1 text-xs text-gray-400">
+              <div className="flex items-center">
+                <Mail className="h-3 w-3 mr-2 text-[#FF9933]" />
+                <span className="font-['PT_Sans',sans-serif]">hello@craftconnect.ai</span>
+              </div>
+              <div className="flex items-center">
+                <MapPin className="h-3 w-3 mr-2 text-[#FF9933]" />
+                <span className="font-['PT_Sans',sans-serif]">Surat, Gujarat, India</span>
+              </div>
             </div>
           </div>
 
@@ -52,18 +60,19 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/features"
-                  className="text-gray-300 hover:text-[#FF9933] transition-colors font-['PT_Sans',sans-serif]"
+                  href="/dashboard"
+                  className="text-gray-300 hover:text-[#FF9933] transition-colors font-['PT_Sans',sans-serif] flex items-center"
                 >
-                  AI Tools
+                  <LayoutDashboard className="h-3 w-3 mr-2" />
+                  Dashboard
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/pricing"
+                  href="/catalog-builder"
                   className="text-gray-300 hover:text-[#FF9933] transition-colors font-['PT_Sans',sans-serif]"
                 >
-                  Pricing
+                  AI Tools
                 </Link>
               </li>
             </ul>
@@ -110,7 +119,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm mb-4">
               <li>
                 <Link
-                  href="/about"
+                  href="/settings?tab=help"
                   className="text-gray-300 hover:text-[#FF9933] transition-colors font-['PT_Sans',sans-serif]"
                 >
                   About
@@ -118,7 +127,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/contact"
+                  href="/settings?tab=help"
                   className="text-gray-300 hover:text-[#FF9933] transition-colors font-['PT_Sans',sans-serif]"
                 >
                   Contact
@@ -126,25 +135,13 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/help"
+                  href="/settings?tab=help"
                   className="text-gray-300 hover:text-[#FF9933] transition-colors font-['PT_Sans',sans-serif]"
                 >
                   Help
                 </Link>
               </li>
             </ul>
-
-            {/* Contact Info */}
-            <div className="space-y-1 text-xs text-gray-400">
-              <div className="flex items-center">
-                <Mail className="h-3 w-3 mr-2 text-[#FF9933]" />
-                <span className="font-['PT_Sans',sans-serif]">hello@craftconnect.ai</span>
-              </div>
-              <div className="flex items-center">
-                <MapPin className="h-3 w-3 mr-2 text-[#FF9933]" />
-                <span className="font-['PT_Sans',sans-serif]">Surat, Gujarat, India</span>
-              </div>
-            </div>
           </div>
         </div>
 
