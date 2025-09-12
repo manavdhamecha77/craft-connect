@@ -58,7 +58,7 @@ export function ArtisanChatbot() {
       if (messages.length === 0) {
         setMessages([{
           role: "assistant",
-          content: `Hi ${user.artisanProfile?.name || 'there'}! I'm your CraftConnect AI Assistant. I can help you with managing your products, understanding the platform, pricing tips, and more. What can I help you with today?`
+          content: `Hi ${user?.artisanProfile?.name || 'there'}! I'm your CraftConnect AI Assistant. I can help you with managing your products, understanding the platform, pricing tips, and more. What can I help you with today?`
         }]);
       }
     }
@@ -118,7 +118,7 @@ export function ArtisanChatbot() {
   const clearChat = () => {
     setMessages([{
       role: "assistant",
-      content: `Hi ${user.artisanProfile?.name || 'there'}! I'm your CraftConnect AI Assistant. I can help you with managing your products, understanding the platform, pricing tips, and more. What can I help you with today?`
+      content: `Hi ${user?.artisanProfile?.name || 'there'}! I'm your CraftConnect AI Assistant. I can help you with managing your products, understanding the platform, pricing tips, and more. What can I help you with today?`
     }]);
   };
 

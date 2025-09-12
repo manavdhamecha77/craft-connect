@@ -5,6 +5,21 @@
  * Copy these examples into your components as needed.
  */
 
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "./button";
+import { Input } from "./input";
+import { Textarea } from "./textarea";
+import { ProductCard } from "@/components/product-card";
+
+// Product interface for examples
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  hint: string;
+}
 import { 
   Loading, 
   PageLoading, 
@@ -52,7 +67,7 @@ export function PageLoadingExample() {
 
 // 3. Section Loading (for content areas)
 export function SectionLoadingExample() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   
   return (
@@ -73,7 +88,7 @@ export function SectionLoadingExample() {
 
 // 4. Card Skeletons (for grid layouts)
 export function CardSkeletonExample() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   
   return (
@@ -94,7 +109,7 @@ export function CardSkeletonExample() {
 
 // 5. Loading Grid (easier way for product grids)
 export function LoadingGridExample() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   
   if (loading) {
@@ -114,6 +129,18 @@ export function LoadingGridExample() {
 export function ButtonLoadingExample() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  
+  const handleSave = async () => {
+    setSaving(true);
+    // Simulate API call
+    setTimeout(() => setSaving(false), 2000);
+  };
+  
+  const handleDelete = async () => {
+    setDeleting(true);
+    // Simulate API call
+    setTimeout(() => setDeleting(false), 2000);
+  };
   
   return (
     <div className="flex gap-4">
@@ -141,7 +168,7 @@ export function ButtonLoadingExample() {
 
 // 7. Inline Loading (for small sections)
 export function InlineLoadingExample() {
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState<{total: number; orders: number} | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
   
   return (
@@ -151,8 +178,8 @@ export function InlineLoadingExample() {
         <InlineLoading text="Calculating stats..." />
       ) : (
         <div>
-          <p>Total Sales: ₹{stats.total}</p>
-          <p>Orders: {stats.orders}</p>
+          <p>Total Sales: ₹{stats?.total || 0}</p>
+          <p>Orders: {stats?.orders || 0}</p>
         </div>
       )}
     </div>
@@ -162,7 +189,14 @@ export function InlineLoadingExample() {
 // 8. Form Loading States
 export function FormLoadingExample() {
   const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState<Record<string, any>>({});
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    // Simulate form submission
+    setTimeout(() => setSubmitting(false), 3000);
+  };
   
   return (
     <form onSubmit={handleSubmit}>
@@ -188,9 +222,23 @@ export function FormLoadingExample() {
 
 // 9. Data Fetching with Different Loading States
 export function DataFetchingExample() {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState<{message: string} | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<any>(null);
+  
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      // Simulate API call
+      setTimeout(() => {
+        setData({ message: "Data loaded" });
+        setLoading(false);
+      }, 2000);
+    } catch (err) {
+      setError(err);
+      setLoading(false);
+    }
+  };
   
   useEffect(() => {
     fetchData();

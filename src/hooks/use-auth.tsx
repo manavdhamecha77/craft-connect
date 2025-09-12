@@ -163,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handlePopState = () => {
       // If user is not authenticated and trying to go back to protected routes
-      if (!user && !loading) {
+      if (!user && !loading && typeof window !== 'undefined') {
         const protectedRoutes = ['/dashboard', '/products', '/orders', '/profile', '/onboarding', '/catalog-builder'];
         const isProtectedRoute = protectedRoutes.some(route => window.location.pathname.startsWith(route));
         
@@ -174,8 +174,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('popstate', handlePopState);
+      return () => window.removeEventListener('popstate', handlePopState);
+    }
   }, [user, loading, router]);
 
   const signOut = async () => {

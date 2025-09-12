@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { PageLayout } from "@/components/page-layout";
-import { getUserProfile } from "@/lib/user-management";
+import { getUserProfile, type UserProfile } from "@/lib/user-management";
 import { getArtisanProducts, getFinalProductDisplay } from "@/lib/firestore-products";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -94,7 +94,11 @@ export default function ArtisanProfilePage() {
         return;
       }
       
-      setArtisan(artisanProfile);
+      // Since we've confirmed role is 'artisan', we can safely cast
+      setArtisan({
+        ...artisanProfile,
+        role: 'artisan' as const
+      } as ArtisanProfile);
       
       // Fetch artisan's products
       const artisanProducts = await getArtisanProducts(artisanId);
