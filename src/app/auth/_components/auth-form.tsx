@@ -145,7 +145,7 @@ export function AuthForm() {
               </Badge>
             </div>
             
-            <h1 className="text-2xl font-semibold tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
               {isLogin ? 'Welcome Back' : `Create ${isArtisan ? 'Artisan' : 'Customer'} Account`}
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -199,7 +199,7 @@ export function AuthForm() {
               disabled={isLoading}
             />
           </div>
-          <Button disabled={isLoading} className="w-full">
+          <Button disabled={isLoading} className="w-full h-11 text-base">
             {isLoading ? "Processing..." : isLogin ? "Sign In" : "Create Account"}
           </Button>
         </form>
@@ -215,7 +215,7 @@ export function AuthForm() {
             </div>
         </div>
         
-        <Button variant="outline" type="button" disabled={isLoading} onClick={handleGoogleAuth}>
+        <Button variant="outline" type="button" disabled={isLoading} onClick={handleGoogleAuth} className="w-full h-11 text-base">
             {isLoading ? (
                 <div className="animate-spin h-5 w-5 mr-3 border-t-2 border-b-2 border-primary" />
             ) : (
@@ -225,16 +225,16 @@ export function AuthForm() {
         </Button>
       </div>
        <div className="space-y-2">
-         <p className="px-8 text-center text-sm text-muted-foreground">
+          <p className="px-4 sm:px-8 text-center text-sm text-muted-foreground">
             <button
               onClick={toggleForm}
-              className="underline underline-offset-4 hover:text-primary"
+              className="underline underline-offset-4 hover:text-primary transition-colors"
               disabled={isLoading}
             >
               {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
             </button>
           </p>
-          <p className="px-8 text-center text-xs text-muted-foreground">
+          <p className="px-4 sm:px-8 text-center text-xs text-muted-foreground">
             {isArtisan ? "Looking to shop? " : "Want to sell your crafts? "}
             <button
               onClick={() => {

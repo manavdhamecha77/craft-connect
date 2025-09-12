@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Facebook, Instagram, Mail, MapPin, Phone, Sparkles, Heart, LayoutDashboard } from "lucide-react";
 import { Logo } from "./logo";
+import { useAuth } from "@/hooks/use-auth";
 
 // Custom X (formerly Twitter) icon component
 const XIcon = ({ className }: { className?: string }) => (
@@ -17,6 +18,9 @@ const XIcon = ({ className }: { className?: string }) => (
 );
 
 export function Footer() {
+  const { user } = useAuth();
+  const isArtisan = user?.role === 'artisan';
+  
   return (
     <footer className="bg-gray-900 text-gray-100">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
@@ -58,23 +62,27 @@ export function Footer() {
                   Join as Artisan
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/dashboard"
-                  className="text-gray-300 hover:text-[#FF9933] transition-colors font-['PT_Sans',sans-serif] flex items-center"
-                >
-                  <LayoutDashboard className="h-3 w-3 mr-2" />
-                  Dashboard
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/catalog-builder"
-                  className="text-gray-300 hover:text-[#FF9933] transition-colors font-['PT_Sans',sans-serif]"
-                >
-                  AI Tools
-                </Link>
-              </li>
+              {isArtisan && (
+                <li>
+                  <Link
+                    href="/dashboard"
+                    className="text-gray-300 hover:text-[#FF9933] transition-colors font-['PT_Sans',sans-serif] flex items-center"
+                  >
+                    <LayoutDashboard className="h-3 w-3 mr-2" />
+                    Dashboard
+                  </Link>
+                </li>
+              )}
+              {isArtisan && (
+                <li>
+                  <Link
+                    href="/catalog-builder"
+                    className="text-gray-300 hover:text-[#FF9933] transition-colors font-['PT_Sans',sans-serif]"
+                  >
+                    AI Tools
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
 

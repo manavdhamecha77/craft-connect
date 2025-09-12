@@ -292,21 +292,21 @@ export default function DashboardPage() {
     <PageLayout>
       <div className="space-y-6">
         {/* Welcome Header */}
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex-1">
             <PageHeader 
               title={`Welcome back, ${user?.artisanProfile?.name || 'Artisan'}!`}
               description="Here's what's happening with your craft business"
             />
           </div>
-          <div className="flex items-center space-x-2">
-            <Badge variant="secondary" className="flex items-center space-x-1">
+          <div className="flex flex-wrap items-center gap-2 sm:space-x-2">
+            <Badge variant="secondary" className="flex items-center space-x-1 text-xs">
               <Palette className="h-3 w-3" />
-              <span>{user?.artisanProfile?.specialization || 'Artisan'}</span>
+              <span className="truncate max-w-24 sm:max-w-none">{user?.artisanProfile?.specialization || 'Artisan'}</span>
             </Badge>
-            <Badge variant="outline" className="flex items-center space-x-1">
+            <Badge variant="outline" className="flex items-center space-x-1 text-xs">
               <MapPin className="h-3 w-3" />
-              <span>{user?.artisanProfile?.region || 'Location'}</span>
+              <span className="truncate max-w-20 sm:max-w-none">{user?.artisanProfile?.region || 'Location'}</span>
             </Badge>
           </div>
         </div>
@@ -324,10 +324,12 @@ export default function DashboardPage() {
               <p className="text-yellow-700 text-sm">
                 A complete profile helps customers trust and connect with your craft story.
               </p>
-              <div className="flex items-center space-x-3">
-                <Progress value={profileCompletionScore} className="flex-1" />
-                <span className="text-sm font-medium text-yellow-800">{profileCompletionScore}%</span>
-                <Button asChild size="sm">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-center space-x-3 flex-1">
+                  <Progress value={profileCompletionScore} className="flex-1" />
+                  <span className="text-sm font-medium text-yellow-800 whitespace-nowrap">{profileCompletionScore}%</span>
+                </div>
+                <Button asChild size="sm" className="w-full sm:w-auto">
                   <Link href="/profile">Complete Profile</Link>
                 </Button>
               </div>
@@ -336,54 +338,54 @@ export default function DashboardPage() {
         )}
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Total Products</CardTitle>
+              <Package className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalProducts}</div>
-              <p className="text-xs text-muted-foreground">
+            <CardContent className="px-3 sm:px-6">
+              <div className="text-xl sm:text-2xl font-bold">{stats.totalProducts}</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
                 {stats.activeProducts} active, {stats.draftProducts} drafts
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Products</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-500" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Active Products</CardTitle>
+              <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.activeProducts}</div>
-              <p className="text-xs text-muted-foreground">
+            <CardContent className="px-3 sm:px-6">
+              <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.activeProducts}</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
                 Live on marketplace
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Price</CardTitle>
-              <IndianRupee className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Average Price</CardTitle>
+              <IndianRupee className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">₹{Math.round(stats.avgPrice).toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
+            <CardContent className="px-3 sm:px-6">
+              <div className="text-xl sm:text-2xl font-bold">₹{Math.round(stats.avgPrice).toLocaleString()}</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
                 Across all products
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Total Value</CardTitle>
+              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">₹{Math.round(stats.totalValue).toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
+            <CardContent className="px-3 sm:px-6">
+              <div className="text-xl sm:text-2xl font-bold">₹{Math.round(stats.totalValue).toLocaleString()}</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
                 Portfolio value
               </p>
             </CardContent>
@@ -396,7 +398,7 @@ export default function DashboardPage() {
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {quickActions.map((action, index) => (
                 <Link key={index} href={action.href}>
                   <div className="group p-4 rounded-lg border hover:border-primary hover:shadow-md transition-all cursor-pointer">

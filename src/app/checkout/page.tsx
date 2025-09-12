@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/contexts/cart-context";
 import { useOrders } from "@/contexts/orders-context";
@@ -47,13 +47,29 @@ export default function CheckoutPage() {
     upiId: ''
   });
 
+  // Redirect to cart if no items (prevent render-phase navigation)
+  useEffect(() => {
+    if (items.length === 0) {
+      router.push('/cart');
+    }
+  }, [items.length, router]);
+
   const subtotal = getTotalPrice();
   const shipping = subtotal > 1000 ? 0 : 50;
   const total = subtotal + shipping;
 
+  // Show loading or empty state while redirecting
   if (items.length === 0) {
-    router.push('/cart');
-    return null;
+    return (
+      <PageLayout>
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Redirecting to cart...</p>
+          </div>
+        </div>
+      </PageLayout>
+    );
   }
 
   const handleInputChange = (field: string, value: string) => {
@@ -138,9 +154,9 @@ export default function CheckoutPage() {
         description="Review your order and complete your purchase"
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Checkout Form */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 lg:space-y-6">
           {/* Shipping Address */}
           <Card>
             <CardHeader>
@@ -150,64 +166,70 @@ export default function CheckoutPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <Label htmlFor="fullName">Full Name *</Label>
+                  <Label htmlFor="fullName" className="text-sm font-medium">Full Name *</Label>
                   <Input
                     id="fullName"
                     value={formData.fullName}
                     onChange={(e) => handleInputChange('fullName', e.target.value)}
                     placeholder="Enter your full name"
+                    className="mt-1 h-10 sm:h-11"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="phone">Phone Number *</Label>
+                  <Label htmlFor="phone" className="text-sm font-medium">Phone Number *</Label>
                   <Input
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
                     placeholder="+91 12345 67890"
+                    className="mt-1 h-10 sm:h-11"
                   />
                 </div>
               </div>
               
               <div>
-                <Label htmlFor="address">Address *</Label>
+                <Label htmlFor="address" className="text-sm font-medium">Address *</Label>
                 <Textarea
                   id="address"
                   value={formData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
                   placeholder="House number, street name, area"
                   rows={3}
+                  className="mt-1 resize-none"
                 />
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div>
-                  <Label htmlFor="city">City *</Label>
+                  <Label htmlFor="city" className="text-sm font-medium">City *</Label>
                   <Input
                     id="city"
                     value={formData.city}
                     onChange={(e) => handleInputChange('city', e.target.value)}
                     placeholder="City"
+                    className="mt-1 h-10 sm:h-11"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="state">State *</Label>
+                  <Label htmlFor="state" className="text-sm font-medium">State *</Label>
                   <Input
                     id="state"
                     value={formData.state}
                     onChange={(e) => handleInputChange('state', e.target.value)}
                     placeholder="State"
+                    className="mt-1 h-10 sm:h-11"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="pincode">Pincode *</Label>
+                  <Label htmlFor="pincode" className="text-sm font-medium">Pincode *</Label>
                   <Input
                     id="pincode"
                     value={formData.pincode}
                     onChange={(e) => handleInputChange('pincode', e.target.value)}
                     placeholder="123456"
+                    className="mt-1 h-10 sm:h-11"
                   />
                 </div>
               </div>
@@ -384,7 +406,7 @@ export default function CheckoutPage() {
               <Button 
                 onClick={handlePlaceOrder}
                 disabled={isProcessing}
-                className="w-full bg-[#FF9933] hover:bg-[#FF9933]/90" 
+                className="w-full bg-[#FF9933] hover:bg-[#FF9933]/90 h-11 sm:h-12 text-sm sm:text-base" 
                 size="lg"
               >
                 {isProcessing ? (

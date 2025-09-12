@@ -134,23 +134,23 @@ export default function MarketplacePage() {
   return (
     <PageLayout>
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-primary/10 via-amber-50/50 to-primary/5 rounded-xl p-8 mb-8">
+      <div className="bg-gradient-to-r from-primary/10 via-amber-50/50 to-primary/5 rounded-xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8">
         <div className="max-w-4xl">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Discover Authentic Handcrafted Treasures</h1>
-          <p className="text-lg text-muted-foreground mb-6">Explore unique artisanal products from skilled craftspeople across India. Each piece tells a story of tradition, culture, and exceptional craftsmanship.</p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1 max-w-md">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Discover Authentic Handcrafted Treasures</h1>
+          <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mb-4 sm:mb-6">Explore unique artisanal products from skilled craftspeople across India. Each piece tells a story of tradition, culture, and exceptional craftsmanship.</p>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search for handcrafted products..." 
+                placeholder="Search handcrafted products..." 
                 value={query} 
                 onChange={handleSearch} 
-                className="pl-10 h-12" 
+                className="pl-10 h-10 sm:h-12 text-sm sm:text-base" 
               />
             </div>
             <Button 
               size="lg" 
-              className="h-12"
+              className="h-10 sm:h-12 text-sm sm:text-base px-4 sm:px-6 whitespace-nowrap"
               onClick={(e) => {
                 if (user?.role === 'customer') {
                   e.preventDefault();
@@ -161,17 +161,18 @@ export default function MarketplacePage() {
               }}
             >
               <Plus className="h-4 w-4 mr-2" />
-              List Your Products
+              <span className="hidden sm:inline">List Your Products</span>
+              <span className="sm:hidden">List Products</span>
             </Button>
           </div>
         </div>
       </div>
 
       {/* Filters and View Toggle */}
-      <div className="flex flex-col lg:flex-row gap-6 mb-8">
-        <div className="flex flex-wrap gap-4 flex-1">
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 mb-6 lg:mb-8">
+        <div className="flex flex-wrap gap-2 sm:gap-3 lg:gap-4 flex-1">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-32 sm:w-36 lg:w-40 h-9 sm:h-10">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
@@ -184,7 +185,7 @@ export default function MarketplacePage() {
           </Select>
 
           <Select value={priceRange} onValueChange={setPriceRange}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-32 sm:w-36 lg:w-40 h-9 sm:h-10">
               <SelectValue placeholder="Price Range" />
             </SelectTrigger>
             <SelectContent>
@@ -197,7 +198,7 @@ export default function MarketplacePage() {
           </Select>
 
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-32 sm:w-36 lg:w-40 h-9 sm:h-10">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -209,25 +210,31 @@ export default function MarketplacePage() {
           </Select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button 
-            variant={viewMode === "grid" ? "default" : "outline"} 
-            size="sm" 
-            onClick={() => setViewMode("grid")}
-          >
-            <Grid3X3 className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant={viewMode === "list" ? "default" : "outline"} 
-            size="sm" 
-            onClick={() => setViewMode("list")}
-          >
-            <List className="h-4 w-4" />
-          </Button>
-          <Separator orientation="vertical" className="h-6 mx-2" />
-          <span className="text-sm text-muted-foreground">
+        <div className="flex items-center justify-between lg:justify-end gap-2">
+          <span className="text-xs sm:text-sm text-muted-foreground lg:order-2">
             {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
           </span>
+          <div className="flex items-center gap-2 lg:order-1">
+            <Button 
+              variant={viewMode === "grid" ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => setViewMode("grid")}
+              className="h-8 sm:h-9 px-2 sm:px-3"
+            >
+              <Grid3X3 className="h-4 w-4" />
+              <span className="hidden sm:inline ml-1">Grid</span>
+            </Button>
+            <Button 
+              variant={viewMode === "list" ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => setViewMode("list")}
+              className="h-8 sm:h-9 px-2 sm:px-3"
+            >
+              <List className="h-4 w-4" />
+              <span className="hidden sm:inline ml-1">List</span>
+            </Button>
+          </div>
+          <Separator orientation="vertical" className="h-6 mx-2 hidden lg:block" />
         </div>
       </div>
 

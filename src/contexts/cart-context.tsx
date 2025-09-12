@@ -54,18 +54,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       
       if (existingItem) {
         if (existingItem.quantity >= existingItem.maxQuantity) {
-          toast({
-            title: "Cannot add more",
-            description: "This item is already at maximum quantity in your cart.",
-            variant: "destructive"
-          });
+          // Use setTimeout to defer toast call outside of render
+          setTimeout(() => {
+            toast({
+              title: "Cannot add more",
+              description: "This item is already at maximum quantity in your cart.",
+              variant: "destructive"
+            });
+          }, 0);
           return currentItems;
         }
         
-        toast({
-          title: "Quantity updated",
-          description: `${product.name} quantity increased in cart.`
-        });
+        // Use setTimeout to defer toast call outside of render
+        setTimeout(() => {
+          toast({
+            title: "Quantity updated",
+            description: `${product.name} quantity increased in cart.`
+          });
+        }, 0);
         
         return currentItems.map(item =>
           item.productId === product.productId
@@ -73,10 +79,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             : item
         );
       } else {
-        toast({
-          title: "Added to cart",
-          description: `${product.name} has been added to your cart.`
-        });
+        // Use setTimeout to defer toast call outside of render
+        setTimeout(() => {
+          toast({
+            title: "Added to cart",
+            description: `${product.name} has been added to your cart.`
+          });
+        }, 0);
         
         return [...currentItems, { ...product, quantity: 1 }];
       }
@@ -84,16 +93,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const removeFromCart = (productId: string) => {
+    let itemName = '';
+    
     setItems(currentItems => {
       const item = currentItems.find(item => item.productId === productId);
       if (item) {
-        toast({
-          title: "Removed from cart",
-          description: `${item.name} has been removed from your cart.`
-        });
+        itemName = item.name;
       }
       return currentItems.filter(item => item.productId !== productId);
     });
+    
+    // Use setTimeout to defer toast call outside of render
+    if (itemName) {
+      setTimeout(() => {
+        toast({
+          title: "Removed from cart",
+          description: `${itemName} has been removed from your cart.`
+        });
+      }, 0);
+    }
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -113,10 +131,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clearCart = () => {
     setItems([]);
-    toast({
-      title: "Cart cleared",
-      description: "All items have been removed from your cart."
-    });
+    // Use setTimeout to defer toast call outside of render
+    setTimeout(() => {
+      toast({
+        title: "Cart cleared",
+        description: "All items have been removed from your cart."
+      });
+    }, 0);
   };
 
   const getTotalItems = () => {
