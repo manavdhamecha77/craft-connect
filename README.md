@@ -1,6 +1,6 @@
 # Craft-Connect
 
-**Slogan:** *Connecting local artisans to global audiences with AI*
+*Where artisans meet the world.*
 
 Craft-Connect is an **AI-powered marketplace platform** that helps local artisans create, market, and sell their crafts online. It combines AI tools with a marketplace ecosystem to simplify product listing, storytelling, pricing, and marketing for artisans, while allowing users to discover and purchase authentic handmade products.
 
